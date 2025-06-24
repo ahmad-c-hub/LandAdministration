@@ -1,6 +1,8 @@
 package com.example.landadministration.entities;
 
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
 import org.hibernate.annotations.GenericGenerator;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -18,6 +20,7 @@ public class Users implements UserDetails {
     private String username;
     private String password;
     private boolean enabled;
+    private boolean is_google_user = false;
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinTable(
@@ -56,6 +59,18 @@ public class Users implements UserDetails {
 
     public void setEnabled(boolean enabled) {
         this.enabled = enabled;
+    }
+
+    public void setIs_google_user(boolean is_google_user) {
+        this.is_google_user = is_google_user;
+    }
+
+    public boolean isGoogleUser() {
+        return is_google_user;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
     }
 
     @Override public boolean isAccountNonExpired() { return true; }

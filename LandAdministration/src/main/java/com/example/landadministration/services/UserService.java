@@ -63,7 +63,7 @@ public class UserService {
         List<Users> usersList = userRepo.findAll();
         List<UsersDTO> usersDTOList = new ArrayList<>();
         for(Users user : usersList){
-            UsersDTO usersDTO = new UsersDTO(user.getUsername(), user.getRole().getAuthority());
+            UsersDTO usersDTO = new UsersDTO(user.getUsername(), user.getRole().getAuthority(),user.isGoogleUser());
             usersDTOList.add(usersDTO);
         }
         return usersDTOList;
