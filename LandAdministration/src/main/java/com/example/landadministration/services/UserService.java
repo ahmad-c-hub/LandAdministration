@@ -1,6 +1,7 @@
 package com.example.landadministration.services;
 
 
+import com.example.landadministration.dtos.UsersDTO;
 import com.example.landadministration.entities.Role;
 import com.example.landadministration.entities.Users;
 import com.example.landadministration.repos.RoleRepo;
@@ -12,6 +13,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -57,8 +59,14 @@ public class UserService {
         return userRepo.save(user);
     }
 
-    public List<Users> getUsers() {
-        return userRepo.findAll();
+    public List<UsersDTO> getUsers() {
+        List<Users> usersList = userRepo.findAll();
+        List<UsersDTO> usersDTOList = new ArrayList<>();
+        for(Users user : usersList){
+            UsersDTO usersDTO = new UsersDTO(user.getUsername(), user.getRole().getAuthority());
+            usersDTOList.add(usersDTO);
+        }
+        return usersDTOList;
     }
 
     public void setRole(Integer id, String role) {

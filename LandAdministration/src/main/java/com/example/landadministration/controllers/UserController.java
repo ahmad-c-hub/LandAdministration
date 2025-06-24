@@ -1,5 +1,6 @@
 package com.example.landadministration.controllers;
 
+import com.example.landadministration.dtos.UsersDTO;
 import com.example.landadministration.entities.Users;
 import com.example.landadministration.services.JWTService;
 import com.example.landadministration.services.UserService;
@@ -40,7 +41,7 @@ public class UserController {
 
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/users")
-    public List<Users> getUsers(){
+    public List<UsersDTO> getUsers(){
         return userService.getUsers();
     }
 
