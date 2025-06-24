@@ -73,6 +73,12 @@ public class UserController {
         return userService.delete(id);
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping("/user/{id}")
+    public UsersDTO getUserById(@PathVariable Integer id){
+        return userService.getUserById(id);
+    }
+
 
 
 }

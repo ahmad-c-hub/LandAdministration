@@ -107,4 +107,14 @@ public class UserService {
         UsersDTO userDTO = new UsersDTO(userUpdated.getUsername(), userUpdated.getRole().getAuthority(),userUpdated.isGoogleUser());
         return userDTO;
     }
+
+    public UsersDTO getUserById(Integer id) {
+        Optional<Users> usersOptional = userRepo.findById(id);
+        if(!usersOptional.isPresent()){
+            throw new IllegalStateException("User not found");
+        }
+        Users user = usersOptional.get();
+        UsersDTO userDTO = new UsersDTO(user.getUsername(), user.getRole().getAuthority(),user.isGoogleUser());
+        return userDTO;
+    }
 }
