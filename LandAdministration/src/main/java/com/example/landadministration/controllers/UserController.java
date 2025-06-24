@@ -1,7 +1,9 @@
 package com.example.landadministration.controllers;
 
 import com.example.landadministration.entities.Users;
+import com.example.landadministration.services.JWTService;
 import com.example.landadministration.services.UserService;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -14,6 +16,9 @@ public class UserController {
 
     @Autowired
     private UserService userService;
+
+    @Autowired
+    private JWTService jwtService;
 
     @PostMapping("/login")
     public String login(@RequestBody Users user){
@@ -32,5 +37,25 @@ public class UserController {
     public void setRole(@PathVariable Integer id, @PathVariable String role){
         userService.setRole(id,role);
     }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping("/users")
+    public List<Users> getUsers(){
+        return userService.getUsers();
+    }
+
+    @PostMapping("/logout")
+    public String logout(HttpServletRequest request){
+        String authHeader = request.getHeader("Authorization");
+        System.out.println("Auth Header: "+authHeader);
+        if(authHeader != null && authHeader.startsWith("Bearer ")){
+            String token = authHeader.substring(7);
+            jwtService.revokeToken(token);
+            return "Logged out successfully! ";
+        }
+        return "No token found!";
+    }
+
+
 
 }

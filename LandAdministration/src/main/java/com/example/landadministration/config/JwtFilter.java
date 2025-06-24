@@ -35,6 +35,11 @@ public class JwtFilter extends OncePerRequestFilter {
 
         if(authHeader != null && authHeader.startsWith("Bearer ")){
             token = authHeader.substring(7);
+            if (jwtService.isTokenRevoked(token)) {
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                response.getWriter().write("Token has been revoked.");
+                return;
+            }
             username = jwtService.extractUserName(token);
         }
 

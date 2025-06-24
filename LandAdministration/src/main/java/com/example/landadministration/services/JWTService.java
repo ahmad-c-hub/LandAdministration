@@ -9,16 +9,20 @@ import org.springframework.stereotype.Service;
 
 import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
+import java.time.Instant;
 import java.util.Base64;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 
 @Service
 public class JWTService {
 
     private String secretKey = "";
+    private final Map<String, Instant> tokenBlacklist = new ConcurrentHashMap<>();
+
 
     public JWTService() {
         try{
@@ -44,6 +48,22 @@ public class JWTService {
                 .signWith(getKey())
                 .compact();
     }
+
+    public void revokeToken(String token) {
+        try {
+            Date expiration = extractExpiration(token);
+            tokenBlacklist.put(token, expiration.toInstant());
+        } catch (Exception e) {
+            // log or handle invalid token
+        }
+    }
+
+    public boolean isTokenRevoked(String token) {
+        Instant expiry = tokenBlacklist.get(token);
+        return expiry != null && expiry.isAfter(Instant.now());
+    }
+
+
 
     private SecretKey getKey() {
         return Keys.hmacShaKeyFor(secretKey.getBytes());
