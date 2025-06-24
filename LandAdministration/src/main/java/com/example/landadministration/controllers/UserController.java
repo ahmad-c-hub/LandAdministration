@@ -56,6 +56,10 @@ public class UserController {
         }
         return "No token found!";
     }
+    @DeleteMapping("/delete/{id}")
+    public void deleteUserById(@PathVariable Integer id){
+        userService.delete(id);
+    }
 
 
 

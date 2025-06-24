@@ -77,4 +77,9 @@ public class UserService {
         user.setRole(roleObj);
         userRepo.save(user);
     }
+
+    public void delete(Integer id) {
+        userRepo.deleteById(id);
+        System.out.println("User deleted");
+    }
 }
