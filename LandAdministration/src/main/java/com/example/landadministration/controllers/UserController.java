@@ -2,6 +2,7 @@ package com.example.landadministration.controllers;
 
 import com.example.landadministration.dtos.UsersDTO;
 import com.example.landadministration.entities.Users;
+import com.example.landadministration.repos.UserRepo;
 import com.example.landadministration.services.JWTService;
 import com.example.landadministration.services.UserService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -10,6 +11,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequestMapping()
@@ -20,6 +22,8 @@ public class UserController {
 
     @Autowired
     private JWTService jwtService;
+    @Autowired
+    private UserRepo userRepo;
 
     @PostMapping("/login")
     public String login(@RequestBody Users user){
@@ -56,9 +60,17 @@ public class UserController {
         }
         return "No token found!";
     }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @PutMapping("/update/{id}")
+    public UsersDTO updateUserById(@PathVariable Integer id, @RequestBody Users user){
+        return userService.updateUser(id,user);
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/delete/{id}")
-    public void deleteUserById(@PathVariable Integer id){
-        userService.delete(id);
+    public UsersDTO deleteUserById(@PathVariable Integer id){
+        return userService.delete(id);
     }
 
 
