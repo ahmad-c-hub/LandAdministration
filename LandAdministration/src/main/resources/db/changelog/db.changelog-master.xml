@@ -11,6 +11,4 @@
     <include file="changes/003-create-user-roles-table.xml" relativeToChangelogFile="true"/>
     <include file="changes/004-add-roles.xml" relativeToChangelogFile="true"/>
     <include file="changes/005-fix-roles.xml" relativeToChangelogFile="true"/>
-    <include file="changes/006-add-isGoogleUser-users.xml" relativeToChangelogFile="true"/>
-
 </databaseChangeLog>
