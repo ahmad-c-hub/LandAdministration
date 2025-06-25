@@ -7,8 +7,4 @@
         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
 
     <include file="changes/001-create-users-table.xml" relativeToChangelogFile="true"/>
-    <include file="changes/002-create-roles-table.xml" relativeToChangelogFile="true"/>
-    <include file="changes/003-create-user-roles-table.xml" relativeToChangelogFile="true"/>
-    <include file="changes/004-add-roles.xml" relativeToChangelogFile="true"/>
-    <include file="changes/005-fix-roles.xml" relativeToChangelogFile="true"/>
 </databaseChangeLog>
