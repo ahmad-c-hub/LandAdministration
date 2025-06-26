@@ -12,5 +12,10 @@
     <include file="changes/004-add-roles.xml" relativeToChangelogFile="true"/>
     <include file="changes/005-fix-roles.xml" relativeToChangelogFile="true"/>
     <include file="changes/006-add-isGoogleUser-users.xml" relativeToChangelogFile="true"/>
+    <include file="changes/007-create-land-table.xml" relativeToChangelogFile="true"/>
+    <include file="changes/008-alter-land-table.xml" relativeToChangelogFile="true"/>
+
+
+
 
 </databaseChangeLog>

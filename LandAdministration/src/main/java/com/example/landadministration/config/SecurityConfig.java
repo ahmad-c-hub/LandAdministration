@@ -48,7 +48,7 @@ public class SecurityConfig {
                 .logout(logout -> logout.disable())
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(request -> request
-                        .requestMatchers("/login", "/register", "/logout", "/oauth2/**").permitAll()
+                        .requestMatchers("user/login", "user/register", "user/logout", "/oauth2/**").permitAll()
                         .anyRequest().authenticated())
                 .exceptionHandling(exception -> exception
                         .authenticationEntryPoint((request, response, authException) -> {
