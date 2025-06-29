@@ -14,7 +14,7 @@ import java.util.List;
 import java.util.Optional;
 
 @RestController
-@RequestMapping()
+@RequestMapping("/user")
 public class UserController {
 
     @Autowired
@@ -44,7 +44,7 @@ public class UserController {
     }
 
     @PreAuthorize("hasRole('ADMIN')")
-    @GetMapping("/users")
+    @GetMapping("/get-users")
     public List<UsersDTO> getUsers(){
         return userService.getUsers();
     }
@@ -74,7 +74,7 @@ public class UserController {
     }
 
     @PreAuthorize("hasRole('ADMIN')")
-    @GetMapping("/user/{id}")
+    @GetMapping("/get-user/{id}")
     public UsersDTO getUserById(@PathVariable Integer id){
         return userService.getUserById(id);
     }
