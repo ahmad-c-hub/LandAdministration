@@ -3,18 +3,28 @@ package com.example.landadministration.services;
 
 import com.example.landadministration.dtos.UsersDTO;
 import com.example.landadministration.entities.Role;
+import com.example.landadministration.entities.UserLog;
 import com.example.landadministration.entities.Users;
 import com.example.landadministration.repos.RoleRepo;
+import com.example.landadministration.repos.UserLogRepo;
 import com.example.landadministration.repos.UserRepo;
+import jakarta.servlet.http.HttpServletRequest;
+import org.apache.catalina.User;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -29,6 +39,9 @@ public class UserService {
     private RoleRepo roleRepo;
 
     @Autowired
+    private UserLogRepo userLogRepo;
+
+    @Autowired
     private JWTService jwtService;
 
     @Autowired
@@ -38,11 +51,31 @@ public class UserService {
     private AuthenticationManager authenticationManager;
 
     public String verify(Users user) {
-        Authentication authentication =
-                authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(user.getUsername(),user.getPassword()));
+        try {
+            Authentication authentication =
+                    authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(user.getUsername(), user.getPassword()));
 
-        if(authentication.isAuthenticated()){
-            return jwtService.generateToken(user.getUsername());
+            if (authentication.isAuthenticated()) {
+                UserLog userLog = new UserLog();
+                Optional<Users> optionalUser = userRepo.findByUsername(user.getUsername());
+                userLog.setUser(optionalUser.get());
+                userLog.setAction("USER_LOGIN");
+                userLog.setTimestamp(LocalDateTime.now());
+                userLog.setDescription("User logged in successfully");
+                userLogRepo.save(userLog);
+                return jwtService.generateToken(user.getUsername());
+            }
+        } catch (Exception e) {
+            System.out.println("Failed to login user: " + user.getUsername());
+            Optional<Users> optionalUser = userRepo.findByUsername(user.getUsername());
+            if (optionalUser.isPresent()) {
+                UserLog userLog = new UserLog();
+                userLog.setUser(optionalUser.get());
+                userLog.setAction("USER_LOGIN");
+                userLog.setTimestamp(LocalDateTime.now());
+                userLog.setDescription("Failed to login user: {" + optionalUser.get().getUsername()+"}");
+                userLogRepo.save(userLog);
+            }
         }
         return "fail";
     }
@@ -55,32 +88,46 @@ public class UserService {
                 .orElseThrow(() -> new IllegalStateException("Default role not found"));
 
         user.setRole(defaultRole);
-        userRepo.save(user);
         user.setEnabled(true);
         user.setPassword(bCryptPasswordEncoder.encode(user.getPassword()));
-        return userRepo.save(user);
+        Users registeredUser = userRepo.save(user);
+        UserLog userLog = new UserLog();
+        userLog.setUser(registeredUser);
+        userLog.setAction("USER_REGISTRATION");
+        userLog.setTimestamp(LocalDateTime.now());
+        userLog.setDescription("New User {"+user.getUsername()+"} signed up successfully.");
+        userLogRepo.save(userLog);
+        return registeredUser;
     }
 
-    public List<UsersDTO> getUsers() {
-        List<Users> usersList = userRepo.findAll();
-        List<UsersDTO> usersDTOList = new ArrayList<>();
-        for(Users user : usersList){
-            UsersDTO usersDTO = new UsersDTO(user.getUsername(), user.getRole().getAuthority(),user.isGoogleUser());
-            usersDTOList.add(usersDTO);
-        }
-        return usersDTOList;
+    public Page<UsersDTO> getUsers(int page, int size) {
+        Sort sort = Sort.by(Sort.Direction.ASC, "id");
+        Pageable pageable = PageRequest.of(page,size, sort);
+        Page<Users> users = userRepo.findAll(pageable);
+        return users.map(user -> new UsersDTO(user.getUsername(), user.getRole().getAuthority(),user.isGoogleUser()));
     }
 
-    public void setRole(Integer id, String role) {
-        Users user = userRepo.findById(id)
+    public String setRole(Integer id, String role, Users userNavigating) {
+        Users userToChange = userRepo.findById(id)
                 .orElseThrow(() -> new IllegalStateException("User not found"));
         Role roleObj = roleRepo.findByName(role)
                 .orElseThrow(() -> new IllegalStateException("Role not found"));
-        user.setRole(roleObj);
-        userRepo.save(user);
+        if(userToChange.getRole().equals(roleObj)){
+            throw new IllegalStateException("Role is already set");
+        }
+        userToChange.setRole(roleObj);
+        userRepo.save(userToChange);
+        UserLog userLog = new UserLog();
+        userLog.setUser(userNavigating);
+        userLog.setAction("ROLE_CHANGE");
+        userLog.setTimestamp(LocalDateTime.now());
+        userLog.setDescription("Admin "+userNavigating.getUsername()+" changed role of {"+
+                userToChange.getUsername()+"} from {"+roleObj.getAuthority()+"} to {"+userToChange.getRole().getAuthority()+"} successfully.");
+        userLogRepo.save(userLog);
+        return "Role set successfully!";
     }
 
-    public UsersDTO delete(Integer id) {
+    public UsersDTO delete(Integer id, Users userNavigating) {
         Optional<Users> usersOptional = userRepo.findById(id);
         userRepo.deleteById(id);
         if(!usersOptional.isPresent()){
@@ -88,23 +135,12 @@ public class UserService {
         }
         Users userToDelete = usersOptional.get();
         UsersDTO userDTO = new UsersDTO(userToDelete.getUsername(), userToDelete.getRole().getAuthority(),userToDelete.isGoogleUser());
-        return userDTO;
-    }
-
-    public UsersDTO updateUser(Integer id, Users user) {
-        Optional<Users> usersOptional= userRepo.findById(id);
-        if(!usersOptional.isPresent()){
-                throw new IllegalStateException("User not found");
-        }
-        Users userToUpdate = usersOptional.get();
-        if(user.getUsername() != null){
-            userToUpdate.setUsername(user.getUsername());
-        }
-        if(user.getPassword()!=null){
-            userToUpdate.setPassword(bCryptPasswordEncoder.encode(user.getPassword()));
-        }
-        Users userUpdated = userRepo.save(userToUpdate);
-        UsersDTO userDTO = new UsersDTO(userUpdated.getUsername(), userUpdated.getRole().getAuthority(),userUpdated.isGoogleUser());
+        UserLog userLog = new UserLog();
+        userLog.setUser(userNavigating);
+        userLog.setAction("Delete User");
+        userLog.setTimestamp(LocalDateTime.now());
+        userLog.setDescription("Admin {"+userNavigating.getUsername()+"} deleted user {"+userToDelete.getUsername()+"} successfully.");
+        userLogRepo.save(userLog);
         return userDTO;
     }
 
@@ -117,4 +153,73 @@ public class UserService {
         UsersDTO userDTO = new UsersDTO(user.getUsername(), user.getRole().getAuthority(),user.isGoogleUser());
         return userDTO;
     }
+
+    public String logout(HttpServletRequest request, Users userNavigating) {
+        String authHeader = request.getHeader("Authorization");
+        System.out.println("Auth Header: "+authHeader);
+        if(authHeader != null && authHeader.startsWith("Bearer ")){
+            String token = authHeader.substring(7);
+            jwtService.revokeToken(token);
+            UserLog userLog = new UserLog();
+            userLog.setUser(userNavigating);
+            userLog.setAction("USER_LOGOUT");
+            userLog.setTimestamp(LocalDateTime.now());
+            userLog.setDescription("User {" + userNavigating.getUsername() + "} logged out successfully");
+            userLogRepo.save(userLog);
+            return "Logged out successfully! ";
+        }
+        return "No token found!";
+    }
+
+    public UsersDTO updateCurrentUser(Users userNavigating, Users userToUpdate) {
+        Optional<Users> usersOptional = userRepo.findByUsername(userNavigating.getUsername());
+        Users user =  usersOptional.get();
+        String updatedUsername = userToUpdate.getUsername();
+        if(updatedUsername != null &&!updatedUsername.equals(user.getUsername())){
+            if(userRepo.findByUsername(updatedUsername).isPresent()){
+                throw new IllegalStateException("Username is already taken!");
+            }
+            user.setUsername(updatedUsername);
+            userRepo.save(user);
+            UsersDTO userDTO = new UsersDTO(user.getUsername(), user.getRole().getAuthority(),user.isGoogleUser());
+            UserLog userLog = new UserLog();
+            userLog.setUser(userNavigating);
+            userLog.setAction("PROFILE_CHANGE");
+            userLog.setTimestamp(LocalDateTime.now());
+            userLog.setDescription("User {"+userNavigating.getUsername()+"} commited a username change successfully.");
+            userLogRepo.save(userLog);
+            return userDTO;
+        }else{
+            return new UsersDTO(user.getUsername(), user.getRole().getAuthority(),user.isGoogleUser());
+        }
+
+    }
+
+    public void updatePassword(Users user, String oldPassword, String newPassword) {
+        if (oldPassword == null || newPassword == null || oldPassword.trim().isEmpty() || newPassword.trim().isEmpty()) {
+            throw new IllegalStateException("Both old and new passwords are required.");
+        }
+
+
+
+        if (!bCryptPasswordEncoder.matches(oldPassword, user.getPassword())) {
+            throw new IllegalStateException("Old password is incorrect.");
+        }
+
+        if (oldPassword.equals(newPassword)) {
+            throw new IllegalStateException("New password cannot be the same as the old one.");
+        }
+
+        user.setPassword(bCryptPasswordEncoder.encode(newPassword));
+        userRepo.save(user);
+
+        // Optional: log action
+        UserLog log = new UserLog();
+        log.setUser(user);
+        log.setAction("PROFILE_CHANGE");
+        log.setTimestamp(LocalDateTime.now());
+        log.setDescription("User {" + user.getUsername() + "} commited a password change successfully.");
+        userLogRepo.save(log);
+    }
+
 }

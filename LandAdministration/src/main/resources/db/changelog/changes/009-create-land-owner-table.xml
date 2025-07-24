@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="
+        http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.3.xsd">
+
+        <changeSet id="009" author="ahmad">
+            <createTable tableName="land_owner">
+                <column name="id" type="INT" autoIncrement="true">
+                    <constraints primaryKey="true" nullable="false"/>
+                </column>
+
+                <column name="first_name" type="VARCHAR(20)">
+                    <constraints nullable="false"/>
+                </column>
+
+                <column name="last_name" type="VARCHAR(20)">
+                    <constraints nullable="false"/>
+                </column>
+
+                <column name="phone_nb" type="VARCHAR(20)">
+                    <constraints nullable="false"/>
+                </column>
+
+                <column name="email_address" type="VARCHAR(50)">
+                    <constraints nullable="true"/>
+                </column>
+            </createTable>
+        </changeSet>
+</databaseChangeLog>

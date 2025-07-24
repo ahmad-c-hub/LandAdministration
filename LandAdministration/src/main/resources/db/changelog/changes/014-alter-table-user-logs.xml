@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
+
+    <changeSet id="014" author="ahmad">
+        <!-- Make user_id nullable -->
+        <modifyDataType tableName="user_logs" columnName="user_id" newDataType="BIGINT"/>
+        <dropNotNullConstraint tableName="user_logs" columnName="user_id"/>
+
+        <!-- Drop the old foreign key constraint -->
+        <dropForeignKeyConstraint
+                baseTableName="user_logs"
+                constraintName="fk_user_logs_user"/>
+
+        <!-- Add new foreign key with ON DELETE SET NULL -->
+        <addForeignKeyConstraint
+                baseTableName="user_logs"
+                baseColumnNames="user_id"
+                referencedTableName="users"
+                referencedColumnNames="id"
+                constraintName="fk_user_logs_user"
+                onDelete="SET NULL"/>
+    </changeSet>
+
+
+</databaseChangeLog>

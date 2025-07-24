@@ -2,6 +2,7 @@ package com.example.landadministration.entities;
 
 import jakarta.persistence.*;
 import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 
 @Entity
@@ -24,6 +25,11 @@ public class Land {
 
     private String usage_type;
 
+
+    @ManyToOne
+    @JoinColumn(name="land_owner_id")
+    private LandOwner landOwner;
+
     public Land() {}
 
     public Land(String location, double longitude, double latitude, double surface_area, String usage_type) {
@@ -43,6 +49,7 @@ public class Land {
                 ", latitude=" + latitude +
                 ", surface_area=" + surfaceArea +
                 ", usage_type='" + usage_type + '\'' +
+                ", landOwner=" + landOwner +
                 '}';
     }
 }

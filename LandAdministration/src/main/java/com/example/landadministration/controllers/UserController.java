@@ -1,29 +1,35 @@
 package com.example.landadministration.controllers;
 
 import com.example.landadministration.dtos.UsersDTO;
+import com.example.landadministration.entities.UserLog;
 import com.example.landadministration.entities.Users;
+import com.example.landadministration.repos.UserLogRepo;
 import com.example.landadministration.repos.UserRepo;
 import com.example.landadministration.services.JWTService;
 import com.example.landadministration.services.UserService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
+@CrossOrigin(
+        origins = "http://localhost:3000",
+        allowedHeaders = "*",
+        methods = {RequestMethod.GET, RequestMethod.POST, RequestMethod.PUT, RequestMethod.DELETE, RequestMethod.OPTIONS}
+)
 @RestController
 @RequestMapping("/user")
 public class UserController {
 
     @Autowired
     private UserService userService;
-
-    @Autowired
-    private JWTService jwtService;
-    @Autowired
-    private UserRepo userRepo;
 
     @PostMapping("/login")
     public String login(@RequestBody Users user){
@@ -39,44 +45,59 @@ public class UserController {
 
     @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/set-role/{id}/{role}")
-    public void setRole(@PathVariable Integer id, @PathVariable String role){
-        userService.setRole(id,role);
+    public String setRole(@PathVariable Integer id, @PathVariable String role){
+        Users userNavigating = (Users) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        return userService.setRole(id,role, userNavigating);
     }
 
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/get-users")
-    public List<UsersDTO> getUsers(){
-        return userService.getUsers();
+    public Page<UsersDTO> getUsers(@RequestParam int page,
+                                   @RequestParam int size){
+        return userService.getUsers(page,size);
     }
 
     @PostMapping("/logout")
     public String logout(HttpServletRequest request){
-        String authHeader = request.getHeader("Authorization");
-        System.out.println("Auth Header: "+authHeader);
-        if(authHeader != null && authHeader.startsWith("Bearer ")){
-            String token = authHeader.substring(7);
-            jwtService.revokeToken(token);
-            return "Logged out successfully! ";
-        }
-        return "No token found!";
+        Users userNavigating = (Users) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        return userService.logout(request, userNavigating);
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
-    @PutMapping("/update/{id}")
-    public UsersDTO updateUserById(@PathVariable Integer id, @RequestBody Users user){
-        return userService.updateUser(id,user);
-    }
+
 
     @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/delete/{id}")
     public UsersDTO deleteUserById(@PathVariable Integer id){
-        return userService.delete(id);
+        Users userNavigating = (Users) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        return userService.delete(id, userNavigating);
     }
 
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/get-user/{id}")
     public UsersDTO getUserById(@PathVariable Integer id){
         return userService.getUserById(id);
+    }
+
+    @GetMapping("/get-role")
+    public String getRole(){
+        Users userNavigating = (Users) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        return userNavigating.getRole().getAuthority();
+    }
+
+    @PutMapping("/update-current-user")
+    public UsersDTO updateCurrentUser(@RequestBody Users user){
+        Users userNavigating = (Users) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        return userService.updateCurrentUser(userNavigating, user);
+    }
+
+    @PutMapping("/change-password")
+    public String updatePassword(@RequestBody Map<String, String> passwords) {
+        String oldPassword = passwords.get("oldPassword");
+        String newPassword = passwords.get("newPassword");
+
+        Users userNavigating = (Users) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        userService.updatePassword(userNavigating, oldPassword, newPassword);
+        return "Password updated successfully.";
     }
 
 
