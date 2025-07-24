@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="
+        http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.3.xsd">
+
+    <changeSet id="012" author="ahmad">
+        <createTable tableName="ownership_history">
+            <column name="land_id" type="INT">
+                <constraints nullable="false" foreignKeyName="fk_ownership_land"
+                             references="land(id)"/>
+            </column>
+
+            <column name="owner_id" type="INT">
+                <constraints nullable="false" foreignKeyName="fk_ownership_owner"
+                             references="land_owner(id)"/>
+            </column>
+
+            <column name="ownership_start" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="ownership_end" type="TIMESTAMP"/>
+
+            <column name="created_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <addPrimaryKey
+                tableName="ownership_history"
+                columnNames="owner_id,land_id"
+                constraintName="pk_ownership_history"/>
+    </changeSet>
+
+</databaseChangeLog>
