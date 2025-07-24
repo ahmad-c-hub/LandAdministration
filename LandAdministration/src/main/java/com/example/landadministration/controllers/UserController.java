@@ -20,10 +20,20 @@ import java.util.Map;
 import java.util.Optional;
 
 @CrossOrigin(
-        origins = "http://localhost:3000",
+        origins = {
+                "http://localhost:3000",           // for local development
+                "https://ahmad-c-hub.github.io"    // for production (GitHub Pages)
+        },
         allowedHeaders = "*",
-        methods = {RequestMethod.GET, RequestMethod.POST, RequestMethod.PUT, RequestMethod.DELETE, RequestMethod.OPTIONS}
+        methods = {
+                RequestMethod.GET,
+                RequestMethod.POST,
+                RequestMethod.PUT,
+                RequestMethod.DELETE,
+                RequestMethod.OPTIONS
+        }
 )
+
 @RestController
 @RequestMapping("/user")
 public class UserController {
