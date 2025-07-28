@@ -87,9 +87,10 @@ public class LandService {
         userLog.setUser(userNavigating);
         userLog.setAction("ADD_LAND");
         userLog.setTimestamp(LocalDateTime.now());
-        userLog.setDescription("User {" + userNavigating.getUsername() + "} added land with id " + land.getId() + ".");
-        userLogRepo.save(userLog);
         Land savedLand = landRepo.save(land);
+        userLog.setDescription("User {" + userNavigating.getUsername() + "} added land with id {" + savedLand.getId() + "} " +
+                "and with location {" + savedLand.getLocation() + "}.");
+        userLogRepo.save(userLog);
         return getDTO(savedLand);
     }
 
@@ -138,8 +139,8 @@ public class LandService {
             userLog.setUser(userNavigating);
             userLog.setAction("UPDATE_USAGE_TYPE");
             userLog.setTimestamp(LocalDateTime.now());
-            userLog.setDescription("User {" + userNavigating.getUsername() + "} updated usage type of land with id " +
-                    id + "from {" + landToUpdate.getUsage_type() +"} to {" + usageType + "}.");
+            userLog.setDescription("User {" + userNavigating.getUsername() + "} updated usage type of land with id {" +
+                    id + "} from {" + landToUpdate.getUsage_type() +"} to {" + usageType + "}.");
             landToUpdate.setUsage_type(usageType);
             Land updatedLand = landRepo.save(landToUpdate);
             userLogRepo.save(userLog);

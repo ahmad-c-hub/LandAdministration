@@ -69,6 +69,7 @@ public class LandOwnerService {
     }
 
     public LandOwnerDTO addLandOwner(LandOwner landOwner) {
+        Users userNavigating = (Users) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         if(landOwner.getFirstName()==null){
             throw new IllegalStateException("First name not entered");
         }
@@ -96,6 +97,14 @@ public class LandOwnerService {
             throw new IllegalStateException("Land owner already exists with the given email address");
         }
         LandOwner savedLandOwner = landOwnerRepo.save(landOwner);
+        UserLog userLog = new UserLog();
+        userLog.setUser(userNavigating);
+        userLog.setAction("ADD_LAND_OWNER");
+        userLog.setTimestamp(LocalDateTime.now());
+        userLog.setDescription("User {"+ userNavigating.getUsername()+"} added owner with name {"+savedLandOwner.getFirstName()+" "+
+                savedLandOwner.getLastName()+"} and id {"+savedLandOwner.getId()+"}.");
+        userLogRepo.save(userLog);
+
         return getDTO(savedLandOwner);
     }
 
@@ -184,6 +193,7 @@ public class LandOwnerService {
     }
 
     public LandOwnerDTO updateOwnerById(LandOwner landOwner, Integer id) {
+        Users userNavigating = (Users) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         Optional<LandOwner> landOwnerOptional = landOwnerRepo.findById(id);
         if(!landOwnerOptional.isPresent()){
             throw new IllegalStateException("Land owner not found");
@@ -193,12 +203,26 @@ public class LandOwnerService {
             ownerToUpdate.setLastName(landOwner.getLastName());
         }
         if(landOwner.getPhoneNb()!=null){
+            Optional<LandOwner> landOwnerOptionalPhone = landOwnerRepo.findByPhoneNb(landOwner.getPhoneNb());
+            if(landOwnerOptionalPhone.isPresent()&&landOwnerOptionalPhone.get().getId()!=id){
+                throw new IllegalStateException("Phone number already exists");
+            }
             ownerToUpdate.setPhoneNb(landOwner.getPhoneNb());
         }
         if(landOwner.getEmailAddress()!=null){
+            Optional<LandOwner> landOwnerOptionalEmail = landOwnerRepo.findByEmailAddress(landOwner.getEmailAddress());
+            if(landOwnerOptionalEmail.isPresent()&&landOwnerOptionalEmail.get().getId()!=id){
+                throw new IllegalStateException("Email address already exists");
+            }
             ownerToUpdate.setEmailAddress(landOwner.getEmailAddress());
         }
         LandOwner updatedOwner = landOwnerRepo.save(ownerToUpdate);
+        UserLog userLog = new UserLog();
+        userLog.setUser(userNavigating);
+        userLog.setAction("UPDATE_LAND_OWNER");
+        userLog.setTimestamp(LocalDateTime.now());
+        userLog.setDescription("User {"+userNavigating.getUsername() +"} added owner with name {"+updatedOwner.getFirstName()+" "+
+                updatedOwner.getLastName()+"} and id {"+updatedOwner.getId()+"}.");
 
         return getDTO(updatedOwner);
     }

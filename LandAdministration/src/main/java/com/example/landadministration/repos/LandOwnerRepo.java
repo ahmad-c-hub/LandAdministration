@@ -17,4 +17,7 @@ public interface LandOwnerRepo extends JpaRepository<LandOwner, Integer> {
 
     @Query("select l from LandOwner l where l.emailAddress = ?1")
     Optional<LandOwner> findByEmailAddress(String emailAddress);
+
+    @Query("select l from LandOwner l where l.phoneNb = ?1")
+    Optional<LandOwner> findByPhoneNb(String phoneNb);
 }
