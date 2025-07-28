@@ -55,6 +55,6 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
         }
 
         String jwtToken = jwtService.generateToken(user.getUsername());
-        response.sendRedirect("http://ahmad-c-hub.github.io/LandAdministrationFRONTEND/oauth2/redirect?token=" + jwtToken);
+        response.sendRedirect("https://ahmad-c-hub.github.io/LandAdministrationFRONTEND/oauth2/redirect?token=" + jwtToken);
     }
 }
