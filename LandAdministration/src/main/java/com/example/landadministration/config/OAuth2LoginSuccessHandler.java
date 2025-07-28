@@ -1,8 +1,10 @@
 package com.example.landadministration.config;
 
 import com.example.landadministration.entities.Role;
+import com.example.landadministration.entities.UserLog;
 import com.example.landadministration.entities.Users;
 import com.example.landadministration.repos.RoleRepo;
+import com.example.landadministration.repos.UserLogRepo;
 import com.example.landadministration.repos.UserRepo;
 import com.example.landadministration.services.JWTService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -21,6 +23,9 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
 
     @Autowired
     private  UserRepo usersRepository;
+
+    @Autowired
+    private UserLogRepo userLogRepo;
 
     @Autowired
     private RoleRepo roleRepo;
@@ -44,6 +49,12 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
 
         if (optionalUser.isPresent()) {
             user = optionalUser.get();
+            UserLog userLog = new UserLog();
+            userLog.setUser(user);
+            userLog.setAction("USER_LOGIN");
+            userLog.setTimestamp(java.time.LocalDateTime.now());
+            userLog.setDescription("User {"+ user.getUsername()+ "} logged in with google successfully.");
+            userLogRepo.save(userLog);
         } else {
             user = new Users();
             user.setUsername(email);
@@ -51,7 +62,13 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
             user.setEnabled(true);
             user.setRole(userRole);
             user.setIs_google_user(true);
-            usersRepository.save(user);
+            Users savedUser = usersRepository.save(user);
+            UserLog userLog = new UserLog();
+            userLog.setUser(savedUser);
+            userLog.setAction("USER_REGISTRATION");
+            userLog.setTimestamp(java.time.LocalDateTime.now());
+            userLog.setDescription("New User {"+user.getUsername()+"} signed up with google successfully.");
+            userLogRepo.save(userLog);
         }
 
         String jwtToken = jwtService.generateToken(user.getUsername());
