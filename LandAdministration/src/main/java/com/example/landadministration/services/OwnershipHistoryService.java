@@ -52,16 +52,17 @@ public class OwnershipHistoryService {
         });
     }*/
 
-    public List<OwnershipHistoryDTO> getAllRecords(){
-        List<OwnershipHistory> historyList = ownershipHistoryRepo.findAll();
-        return historyList.stream().map(ownershipHistory -> {
+    public Page<OwnershipHistoryDTO> getAllRecords(int page, int size){
+        Pageable pageable = PageRequest.of(page,size);
+        Page<OwnershipHistory> historyPaged = ownershipHistoryRepo.findAll(pageable);
+        return historyPaged.map(ownershipHistory ->{
             OwnershipHistoryDTO dto = new OwnershipHistoryDTO(getLandDTO(ownershipHistory.getLand()),
                     getOwnerDTO(ownershipHistory.getOwner()),
                     ownershipHistory.getOwnershipStart(),
                     ownershipHistory.getOwnershipEnd(),
                     ownershipHistory.getCreatedAt());
             return dto;
-        }).toList();
+        });
     }
 
     public Page<OwnershipHistoryDTO> getOwnershipHistoryByOwnerId(int page, int size, Integer ownerId) {

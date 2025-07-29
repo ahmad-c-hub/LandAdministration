@@ -1,5 +1,6 @@
 package com.example.landadministration.repos;
 
+import com.example.landadministration.dtos.OwnershipHistoryDTO;
 import com.example.landadministration.entities.OwnershipHistory;
 import com.example.landadministration.entities.OwnershipHistoryId;
 import org.springframework.data.domain.Page;

@@ -35,14 +35,17 @@ public class OwnershipHistoryController {
     @Autowired
     private OwnershipHistoryRepo ownershipHistoryRepository;
 
+
+
     @GetMapping("/records")
     public Integer getOwnershipHistoryRecordsSize(){
         return ownershipHistoryRepository.findAll().size();
     }
 
     @GetMapping("/recordss")
-    public List<OwnershipHistoryDTO> getAllRecords(){
-        return ownershipHistoryService.getAllRecords();
+    public Page<OwnershipHistoryDTO> getAllRecords(@RequestParam int page,
+                                                   @RequestParam int size){
+        return ownershipHistoryService.getAllRecords(page, size);
     }
 
     /*@GetMapping("/land")
