@@ -27,5 +27,7 @@ public interface OwnershipHistoryRepo extends JpaRepository<OwnershipHistory, Ow
 
     @Query(value = "SELECT nextval('ownership_record_id_seq')", nativeQuery = true)
     Integer getNextRecordId();
+    @Query("SELECT h FROM OwnershipHistory h WHERE h.land.id = :landId AND h.owner.id = :ownerId AND h.ownershipEnd is NULL")
+    Optional<OwnershipHistory> findActiveByOwner_IdAndLand_Id(Integer ownerId, Integer landId);
 
 }

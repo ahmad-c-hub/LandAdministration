@@ -411,9 +411,7 @@ public class LandService {
         }
         LandOwner owner = land.getLandOwner();
 
-        OwnershipHistoryId id = new OwnershipHistoryId(ownershipHistoryRepo.getNextRecordId(), land.getId(), owner.getId());
-
-        Optional<OwnershipHistory> historyOptional = ownershipHistoryRepo.findById(id);
+        Optional<OwnershipHistory> historyOptional = ownershipHistoryRepo.findActiveByOwner_IdAndLand_Id(owner.getId(),landId);
         historyOptional.get().setOwnershipEnd(LocalDateTime.now());
         land.setLandOwner(null);
         Land updatedLand = landRepo.save(land);
