@@ -404,6 +404,7 @@ public class LandService {
     }
 
     public LandDTO unassignOwner(Integer landId) {
+        Users user = (Users) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         Land land = landRepo.findById(landId)
                 .orElseThrow(() -> new IllegalStateException("Land not found"));
         if(land.getLandOwner()==null){
@@ -415,6 +416,12 @@ public class LandService {
         historyOptional.get().setOwnershipEnd(LocalDateTime.now());
         land.setLandOwner(null);
         Land updatedLand = landRepo.save(land);
+        UserLog userLog = new UserLog();
+        userLog.setUser(user);
+        userLog.setAction("UNASSIGN_OWNER");
+        userLog.setTimestamp(LocalDateTime.now());
+        userLog.setDescription("User {" + user.getUsername() + "} unassigned land with id {" + landId + "} from owner {" + owner.getId() + "}.");
+        userLogRepo.save(userLog);
         return getDTO(updatedLand);
     }
 
