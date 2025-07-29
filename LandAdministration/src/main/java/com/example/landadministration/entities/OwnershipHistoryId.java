@@ -9,18 +9,21 @@ import lombok.Setter;
 
 import java.io.Serializable;
 
+@Embeddable
 @Getter
 @Setter
-@Embeddable
 @NoArgsConstructor
 @AllArgsConstructor
-
 public class OwnershipHistoryId implements Serializable {
+
+    @Column(name = "record_id")
+    private Integer recordId;
 
     @Column(name = "land_id")
     private Integer landId;
 
     @Column(name = "owner_id")
     private Integer ownerId;
-
 }
+
+

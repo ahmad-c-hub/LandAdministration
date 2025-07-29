@@ -20,6 +20,7 @@
     <include file="changes/012-create-ownership-history-table.xml" relativeToChangelogFile="true"/>
     <include file="changes/013-create-user-logs-table.xml" relativeToChangelogFile="true"/>
     <include file="changes/014-alter-table-user-logs.xml" relativeToChangelogFile="true"/>
+    <include file="changes/015-add-id-to-ownership.xml" relativeToChangelogFile="true"/>
 
 
 

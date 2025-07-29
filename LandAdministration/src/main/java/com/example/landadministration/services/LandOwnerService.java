@@ -118,7 +118,7 @@ public class LandOwnerService {
         Land land = landRepo.findById(landId)
                 .orElseThrow(() -> new IllegalStateException("Land not found"));
 
-        OwnershipHistoryId id = new OwnershipHistoryId(land.getId(), owner.getId());
+        OwnershipHistoryId id = new OwnershipHistoryId(ownershipHistoryRepo.getNextRecordId(),land.getId(), owner.getId());
 
         Optional<OwnershipHistory> historyOptional = ownershipHistoryRepo.findById(id);
         if(historyOptional.isPresent()&&historyOptional.get().getOwnershipEnd()==null){

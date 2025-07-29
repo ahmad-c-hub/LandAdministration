@@ -4,7 +4,6 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Entity
@@ -35,13 +34,14 @@ public class OwnershipHistory {
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
-    public OwnershipHistory() {
-    }
+    public OwnershipHistory() {}
 
-    public OwnershipHistory(Land land, LandOwner landOwner, LocalDateTime ownershipStartDate, LocalDateTime createdAt) {
+    public OwnershipHistory(Integer recordId, Land land, LandOwner owner, LocalDateTime ownershipStart, LocalDateTime createdAt) {
+        this.id = new OwnershipHistoryId(recordId, land.getId(), owner.getId());
         this.land = land;
-        this.owner = landOwner;
-        this.ownershipStart = ownershipStartDate;
+        this.owner = owner;
+        this.ownershipStart = ownershipStart;
         this.createdAt = createdAt;
     }
 }
+

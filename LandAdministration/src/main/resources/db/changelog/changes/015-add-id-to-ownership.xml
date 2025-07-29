@@ -1,0 +1,40 @@
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+         https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.3.xsd">
+
+    <changeSet id="015" author="adnan">
+
+        <!-- 1. Add new auto-incrementing record_id column -->
+        <addColumn tableName="ownership_history">
+            <column name="record_id" type="INT"/>
+        </addColumn>
+
+        <!-- 2. Create a sequence for record_id -->
+        <createSequence sequenceName="ownership_record_id_seq"
+                        startValue="1"
+                        incrementBy="1" />
+
+        <!-- 3. Fill existing rows with generated record_ids (if any exist) -->
+        <sql>
+            WITH numbered AS (
+                SELECT row_number() OVER () AS rn, land_id, owner_id
+                FROM ownership_history
+            )
+            UPDATE ownership_history oh
+            SET record_id = numbered.rn
+                FROM numbered
+            WHERE oh.land_id = numbered.land_id AND oh.owner_id = numbered.owner_id;
+        </sql>
+
+        <!-- 4. Drop old primary key -->
+        <dropPrimaryKey tableName="ownership_history"/>
+
+        <!-- 5. Add new composite primary key -->
+        <addPrimaryKey tableName="ownership_history"
+                       columnNames="record_id, land_id, owner_id"
+                       constraintName="pk_ownership_history" />
+
+    </changeSet>
+</databaseChangeLog>
