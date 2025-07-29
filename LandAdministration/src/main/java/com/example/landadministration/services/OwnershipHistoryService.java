@@ -35,7 +35,7 @@ public class OwnershipHistoryService {
     private LandRepo landRepo;
 
 
-    /*public Page<OwnershipHistoryDTO> getLandHistoryById(int page, int size, Integer id) {
+    public Page<OwnershipHistoryDTO> getLandHistoryById(int page, int size, Integer id) {
         Optional<Land> land = landRepo.findById(id);
         if (!land.isPresent()) {
             throw new IllegalStateException("Land not found");
@@ -50,7 +50,7 @@ public class OwnershipHistoryService {
                     ownershipHistory.getCreatedAt());
             return dto;
         });
-    }*/
+    }
 
     public Page<OwnershipHistoryDTO> getAllRecords(int page, int size){
         Pageable pageable = PageRequest.of(page,size);

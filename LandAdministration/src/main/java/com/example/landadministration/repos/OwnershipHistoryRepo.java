@@ -21,7 +21,7 @@ public interface OwnershipHistoryRepo extends JpaRepository<OwnershipHistory, Ow
 
 
     @Query("SELECT h FROM OwnershipHistory h WHERE h.land.id = :landId")
-    List<OwnershipHistory> findByLand_Id(Integer landId);
+    Page<OwnershipHistory> findByLand_Id(Integer landId, Pageable pageable);
 
     @Query("SELECT h FROM OwnershipHistory h WHERE h.owner.id = :ownerId")
     Page<OwnershipHistory> findByOwner_Id(Integer ownerId, Pageable pageable);

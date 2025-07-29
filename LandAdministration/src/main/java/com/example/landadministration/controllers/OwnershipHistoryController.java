@@ -48,12 +48,12 @@ public class OwnershipHistoryController {
         return ownershipHistoryService.getAllRecords(page, size);
     }
 
-    /*@GetMapping("/land")
+    @GetMapping("/land")
     public Page<OwnershipHistoryDTO> getLandHistoryById(@RequestParam int size,
                                                         @RequestParam int page,
                                                         @RequestParam Integer id){
         return ownershipHistoryService.getLandHistoryById(page,size,id);
-    }*/
+    }
 
     @GetMapping("/owner")
     public Page<OwnershipHistoryDTO> getOwnerHistoryById(@RequestParam int page,
