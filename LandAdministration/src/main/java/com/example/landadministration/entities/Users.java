@@ -21,6 +21,7 @@ public class Users implements UserDetails {
     private String password;
     private boolean enabled;
     private boolean is_google_user = false;
+    private String country;
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinTable(
@@ -67,6 +68,14 @@ public class Users implements UserDetails {
 
     public boolean isGoogleUser() {
         return is_google_user;
+    }
+
+    public String getCountry() {
+        return country;
+    }
+
+    public void setCountry(String country) {
+        this.country = country;
     }
 
     public void setUsername(String username) {

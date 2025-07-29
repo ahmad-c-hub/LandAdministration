@@ -4,10 +4,7 @@ package com.example.landadministration.services;
 import com.example.landadministration.dtos.LandDTO;
 import com.example.landadministration.dtos.LandOwnerDTO;
 import com.example.landadministration.dtos.OwnershipHistoryDTO;
-import com.example.landadministration.entities.Land;
-import com.example.landadministration.entities.LandOwner;
-import com.example.landadministration.entities.OwnershipHistory;
-import com.example.landadministration.entities.OwnershipHistoryId;
+import com.example.landadministration.entities.*;
 import com.example.landadministration.repos.LandOwnerRepo;
 import com.example.landadministration.repos.LandRepo;
 import com.example.landadministration.repos.OwnershipHistoryRepo;
@@ -17,6 +14,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -115,7 +113,15 @@ public class OwnershipHistoryService {
     }
 
     public String deleteAllRecords() {
+        Users userNavigating = (Users) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         ownershipHistoryRepo.deleteAll();
+        UserLog userLog = new UserLog();
+        userLog.setUser(userNavigating);
+        userLog.setAction("DELETE_ALL_HISTORY_RECORDS");
+        userLog.setTimestamp(java.time.LocalDateTime.now());
+        userLog.setDescription("All records deleted successfully");
+        userLogRepo.save(userLog);
+
         return "All records deleted successfully";
     }
 }

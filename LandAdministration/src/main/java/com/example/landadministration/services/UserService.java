@@ -104,7 +104,7 @@ public class UserService {
         Sort sort = Sort.by(Sort.Direction.ASC, "id");
         Pageable pageable = PageRequest.of(page,size, sort);
         Page<Users> users = userRepo.findAll(pageable);
-        return users.map(user -> new UsersDTO(user.getUsername(), user.getRole().getAuthority(),user.isGoogleUser()));
+        return users.map(user -> new UsersDTO(user.getUsername(), user.getRole().getAuthority(),user.isGoogleUser(),user.getCountry()));
     }
 
     public String setRole(Integer id, String role, Users userNavigating) {
@@ -134,7 +134,7 @@ public class UserService {
             throw new IllegalStateException("User not found");
         }
         Users userToDelete = usersOptional.get();
-        UsersDTO userDTO = new UsersDTO(userToDelete.getUsername(), userToDelete.getRole().getAuthority(),userToDelete.isGoogleUser());
+        UsersDTO userDTO = new UsersDTO(userToDelete.getUsername(), userToDelete.getRole().getAuthority(),userToDelete.isGoogleUser(), userToDelete.getCountry());
         UserLog userLog = new UserLog();
         userLog.setUser(userNavigating);
         userLog.setAction("Delete User");
@@ -150,7 +150,7 @@ public class UserService {
             throw new IllegalStateException("User not found");
         }
         Users user = usersOptional.get();
-        UsersDTO userDTO = new UsersDTO(user.getUsername(), user.getRole().getAuthority(),user.isGoogleUser());
+        UsersDTO userDTO = new UsersDTO(user.getUsername(), user.getRole().getAuthority(),user.isGoogleUser(), user.getCountry());
         return userDTO;
     }
 
@@ -181,7 +181,7 @@ public class UserService {
             }
             user.setUsername(updatedUsername);
             userRepo.save(user);
-            UsersDTO userDTO = new UsersDTO(user.getUsername(), user.getRole().getAuthority(),user.isGoogleUser());
+            UsersDTO userDTO = new UsersDTO(user.getUsername(), user.getRole().getAuthority(),user.isGoogleUser(), user.getCountry());
             UserLog userLog = new UserLog();
             userLog.setUser(userNavigating);
             userLog.setAction("PROFILE_CHANGE");
@@ -190,7 +190,7 @@ public class UserService {
             userLogRepo.save(userLog);
             return userDTO;
         }else{
-            return new UsersDTO(user.getUsername(), user.getRole().getAuthority(),user.isGoogleUser());
+            return new UsersDTO(user.getUsername(), user.getRole().getAuthority(),user.isGoogleUser(), user.getCountry());
         }
 
     }

@@ -13,10 +13,14 @@ public class UsersDTO {
     @Getter
     private boolean isGoogleUser;
 
-    public UsersDTO(String username, String role, boolean isGoogleUser) {
+    @Getter
+    private String country;
+
+    public UsersDTO(String username, String role, boolean isGoogleUser, String country) {
         this.username = username;
         this.role = role;
         this.isGoogleUser = isGoogleUser;
+        this.country = country;
     }
 
     public String toString(){
@@ -24,6 +28,7 @@ public class UsersDTO {
                 "username='" + username + '\'' +
                 ", role='" + role + '\'' +
                 ", isGoogleUser=" + isGoogleUser +
+                ", country='" + country + '\'' +
                 '}';
     }
 }
