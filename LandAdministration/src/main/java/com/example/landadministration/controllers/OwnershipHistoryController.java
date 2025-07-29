@@ -61,4 +61,9 @@ public class OwnershipHistoryController {
                                                          @RequestParam Integer id){
         return ownershipHistoryService.getOwnershipHistoryByOwnerId(page,size,id);
     }
+
+    @DeleteMapping("/delete-all")
+    public String deleteAllRecords(){
+        return ownershipHistoryService.deleteAllRecords();
+    }
 }

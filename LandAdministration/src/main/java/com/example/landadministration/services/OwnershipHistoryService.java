@@ -11,10 +11,12 @@ import com.example.landadministration.entities.OwnershipHistoryId;
 import com.example.landadministration.repos.LandOwnerRepo;
 import com.example.landadministration.repos.LandRepo;
 import com.example.landadministration.repos.OwnershipHistoryRepo;
+import com.example.landadministration.repos.UserLogRepo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -33,6 +35,9 @@ public class OwnershipHistoryService {
 
     @Autowired
     private LandRepo landRepo;
+
+    @Autowired
+    private UserLogRepo userLogRepo;
 
 
     public Page<OwnershipHistoryDTO> getLandHistoryById(int page, int size, Integer id) {
@@ -107,5 +112,10 @@ public class OwnershipHistoryService {
                 getOwnerDTO(land.getLandOwner()));
         landDTO.setLocationCoordinates(land.getLatitude(),land.getLongitude());
         return landDTO;
+    }
+
+    public String deleteAllRecords() {
+        ownershipHistoryRepo.deleteAll();
+        return "All records deleted successfully";
     }
 }
