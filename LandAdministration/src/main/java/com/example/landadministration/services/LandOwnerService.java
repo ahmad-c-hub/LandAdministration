@@ -116,16 +116,12 @@ public class LandOwnerService {
         if(landOwner.getDateOfBirth().isAfter(LocalDate.now())){
             throw new IllegalStateException("Date of birth cannot be in the future");
         }
-        Optional<LandOwner> landOwnerOptional = landOwnerRepo.findByFirstNameAndLastName(landOwner.getFirstName(), landOwner.getLastName());
-        if(landOwnerOptional.isPresent()){
-            throw new IllegalStateException("Land owner already exists with the given first name and last name");
-        }
-        Optional<LandOwner> landOwnerOptional1 = landOwnerRepo.findByEmailAddress(landOwner.getEmailAddress());
-        if(landOwnerOptional1.isPresent()){
-            throw new IllegalStateException("Land owner already exists with the given email address");
-        }
         if(landOwner.getCountry()==null){
             landOwner.setCountry(userNavigating.getCountry());
+        }
+        Optional<LandOwner> landOwnerOptional1 = landOwnerRepo.findByEmailAddressAndCountry(landOwner.getEmailAddress(), landOwner.getCountry());
+        if(landOwnerOptional1.isPresent()){
+            throw new IllegalStateException("Land owner already exists with the given email address");
         }
         LandOwner savedLandOwner = landOwnerRepo.save(landOwner);
         UserLog userLog = new UserLog();
@@ -143,11 +139,19 @@ public class LandOwnerService {
     // it just updates the old history record and does not create a new record
     public LandDTO assignLandToOwner(Integer ownerId, Integer landId) {
         Users userNavigating = (Users) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        LandOwner owner = landOwnerRepo.findById(ownerId)
-                .orElseThrow(() -> new IllegalStateException("Land owner not found"));
-
         Land land = landRepo.findById(landId)
                 .orElseThrow(() -> new IllegalStateException("Land not found"));
+        Optional<LandOwner> ownerOptional = landOwnerRepo.findById(ownerId);
+        if(!ownerOptional.isPresent()){
+            throw new IllegalStateException("Land owner not found");
+        }
+
+        LandOwner owner = ownerOptional.get();
+
+        if(!owner.getCountry().equals(land.getCountryFromLocation(land.getLocation()))){
+            throw new IllegalStateException("Land owner not found in "+land.getCountryFromLocation(land.getLocation())+".");
+        }
+
 
         OwnershipHistoryId id = new OwnershipHistoryId(ownershipHistoryRepo.getNextRecordId(),land.getId(), owner.getId());
 
@@ -204,9 +208,14 @@ public class LandOwnerService {
 
 
     public Page<LandDTO> getLandsByOwnerId(Integer id, String sortedBy, int page, int size) {
+        Users userNavigating = (Users) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         Optional<LandOwner> landOwnerOptional = landOwnerRepo.findById(id);
         if(!landOwnerOptional.isPresent()){
             throw new IllegalStateException("Land owner not found");
+        }
+        LandOwner landOwner = landOwnerOptional.get();
+        if(!landOwner.getCountry().equals(userNavigating.getCountry())){
+            throw new IllegalStateException("Land owner not found in "+userNavigating.getCountry()+".");
         }
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.ASC, sortedBy));
         Page<Land> landPage = landRepo.findLandsByOwnerId(id, pageable);
@@ -230,6 +239,9 @@ public class LandOwnerService {
             throw new IllegalStateException("Land owner not found");
         }
         LandOwner ownerToUpdate = landOwnerOptional.get();
+        if(!landOwner.getCountry().equals(userNavigating.getCountry())){
+            throw new IllegalStateException("Land owner not found in "+userNavigating.getCountry()+".");
+        }
         if(landOwner.getLastName()!=null){
             ownerToUpdate.setLastName(landOwner.getLastName());
         }
@@ -259,9 +271,13 @@ public class LandOwnerService {
     }
 
     public String deleteOwnerById(Integer id) {
+        Users userNavigating = (Users) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         Optional<LandOwner> landOwnerOptional = landOwnerRepo.findById(id);
         if(!landOwnerOptional.isPresent()){
             throw new IllegalStateException("Land owner not found");
+        }
+        if(!landOwnerOptional.get().getCountry().equals(userNavigating.getCountry())){
+            throw new IllegalStateException("Land owner not found in "+userNavigating.getCountry()+".");
         }
         LandOwner landOwnerToDelete = landOwnerOptional.get();
         if(landOwnerToDelete.getLands()!=null){
