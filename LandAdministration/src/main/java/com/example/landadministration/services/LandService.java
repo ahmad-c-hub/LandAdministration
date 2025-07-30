@@ -347,9 +347,11 @@ public class LandService {
 
     public Page<LandDTO> filterBySurfaceAreaPaged(double min, double max, String sortedBy, int page, int size) {
         Users userNavigating = (Users) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+
         if (min >= max) {
             throw new IllegalStateException("Min value must be less than max value");
         }
+
         Sort sort;
         if (sortedBy.equals("location")) {
             sort = Sort.by(Sort.Direction.ASC, "location");
@@ -361,37 +363,44 @@ public class LandService {
             sort = Sort.by(Sort.Direction.ASC, "id");
         }
 
-        Pageable pageable = PageRequest.of(page, size, sort);
-        Page<Land> landPage = landRepo.filterBySurfaceAreaPage(min, max, pageable);
+        // Fetch all results within range, sorted, but NOT paged
+        List<Land> allMatching = landRepo.filterBySurfaceArea(min, max, sort);
 
-        if(userNavigating.getCountry().isEmpty()){
-            if (landPage.isEmpty()) {
-                throw new IllegalStateException("No land found within the given surface area");
+        // Apply in-memory filtering based on user's country
+        List<Land> filteredList = new ArrayList<>();
+        for (Land land : allMatching) {
+            if (userNavigating.getCountry().isEmpty() ||
+                    land.getCountryFromLocation(land.getLocation()).equals(userNavigating.getCountry())) {
+                filteredList.add(land);
             }
-
-            return landPage.map(land -> {
-                LandDTO dto = new LandDTO(land.getId(), land.getLocation(), land.getSurfaceArea(), land.getUsage_type(),getDTO(land.getLandOwner()));
-                dto.setLocationCoordinates(land.getLatitude(), land.getLongitude());
-                return dto;
-            });
-        }else{
-            List<Land> filteredList = new ArrayList<>();
-            for (Land land : landPage) {
-                if (land.getCountryFromLocation(land.getLocation()).equals(userNavigating.getCountry())) {
-                    filteredList.add(land);
-                }
-            }
-            Page<Land> landPageToReturn = new PageImpl<>(filteredList, pageable, filteredList.size());
-            if (landPageToReturn.isEmpty()) {
-                throw new IllegalStateException("No land found within the given surface area in "+userNavigating.getCountry());
-            }
-            return landPageToReturn.map(land -> {
-                LandDTO dto = new LandDTO(land.getId(), land.getLocation(), land.getSurfaceArea(), land.getUsage_type(),getDTO(land.getLandOwner()));
-                dto.setLocationCoordinates(land.getLatitude(), land.getLongitude());
-                return dto;
-            });
         }
+
+        if (filteredList.isEmpty()) {
+            String msg = userNavigating.getCountry().isEmpty()
+                    ? "No land found within the given surface area"
+                    : "No land found within the given surface area in " + userNavigating.getCountry();
+            throw new IllegalStateException(msg);
+        }
+
+        // Manual paging
+        int start = Math.min(page * size, filteredList.size());
+        int end = Math.min(start + size, filteredList.size());
+        List<Land> pageContent = filteredList.subList(start, end);
+        Page<Land> filteredPage = new PageImpl<>(pageContent, PageRequest.of(page, size, sort), filteredList.size());
+
+        return filteredPage.map(land -> {
+            LandDTO dto = new LandDTO(
+                    land.getId(),
+                    land.getLocation(),
+                    land.getSurfaceArea(),
+                    land.getUsage_type(),
+                    getDTO(land.getLandOwner())
+            );
+            dto.setLocationCoordinates(land.getLatitude(), land.getLongitude());
+            return dto;
+        });
     }
+
 
 
 
@@ -438,53 +447,7 @@ public class LandService {
         landDTO.setLocationCoordinates(land.getLatitude(),land.getLongitude());
         return landDTO;
     }
-    public Page<LandDTO> searchLands(String location, String usageType, String ownerName, String sortedBy, int page, int size) {
-        Specification<Land> spec = (root, query, cb) -> cb.conjunction();
-        Users userNavigating = (Users) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        if (location != null && !location.isEmpty()) {
-            spec = spec.and(LandSpecification.hasLocation(location));
-        }
-        if (usageType != null && !usageType.isEmpty()) {
-            spec = spec.and(LandSpecification.hasUsageType(usageType));
-        }
-        if (ownerName != null && !ownerName.isEmpty()) {
-            spec = spec.and(LandSpecification.hasOwnerName(ownerName));
-        }
 
-        Sort sort = Sort.by(Sort.Direction.ASC, sortedBy);
-        Pageable pageable = PageRequest.of(page, size, sort);
-        Page<Land> landPage = landRepo.findAll(spec, pageable);
-
-        if(userNavigating.getCountry().isEmpty()){
-            if(landPage.isEmpty()){
-                throw new IllegalStateException("No lands found");
-            }
-            return landPage.map(land -> {
-                LandDTO dto = new LandDTO(land.getId(), land.getLocation(), land.getSurfaceArea(), land.getUsage_type(),getDTO(land.getLandOwner()));
-                dto.setLocationCoordinates(land.getLatitude(), land.getLongitude());
-                return dto;
-            });
-        } else {
-            List<Land> filteredList = new ArrayList<>();
-
-            for (Land land : landPage) {
-                if (land.getCountryFromLocation(land.getLocation()).equals(userNavigating.getCountry())) {
-                    filteredList.add(land);
-                }
-            }
-
-            Page<Land> landPageToReturn = new PageImpl<>(filteredList, pageable, filteredList.size());
-            if (landPageToReturn.isEmpty()) {
-                throw new IllegalStateException("No lands found in "+ userNavigating.getCountry() + ".");
-            }
-            return landPageToReturn.map(land -> {
-                LandDTO dto = new LandDTO(land.getId(), land.getLocation(), land.getSurfaceArea(), land.getUsage_type(),getDTO(land.getLandOwner()));
-                dto.setLocationCoordinates(land.getLatitude(), land.getLongitude());
-                return dto;
-            });
-        }
-
-    }
     public LandOwnerDTO getDTO(LandOwner landOwner){
         if(landOwner==null){
             return null;
@@ -539,4 +502,55 @@ public class LandService {
         System.out.println("Unassigned lands: " + landRepo.getUnassignedLands().size());
         return landRepo.getUnassignedLands().size();
     }
+    public Page<LandDTO> searchLands(String location, String usageType, String ownerName, String sortedBy, int page, int size) {
+        Specification<Land> spec = (root, query, cb) -> cb.conjunction();
+        Users userNavigating = (Users) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+
+        if (location != null && !location.isEmpty()) {
+            spec = spec.and(LandSpecification.hasLocation(location));
+        }
+        if (usageType != null && !usageType.isEmpty()) {
+            spec = spec.and(LandSpecification.hasUsageType(usageType));
+        }
+        if (ownerName != null && !ownerName.isEmpty()) {
+            spec = spec.and(LandSpecification.hasOwnerName(ownerName));
+        }
+
+        // Sort all matching results (not paged yet)
+        Sort sort = Sort.by(Sort.Direction.ASC, sortedBy);
+        List<Land> allLands = landRepo.findAll(spec, sort);
+
+        // Filter by country if needed
+        List<Land> filteredList = new ArrayList<>();
+        for (Land land : allLands) {
+            if (userNavigating.getCountry().isEmpty() ||
+                    land.getCountryFromLocation(land.getLocation()).equals(userNavigating.getCountry())) {
+                filteredList.add(land);
+            }
+        }
+
+        if (filteredList.isEmpty()) {
+            String msg = userNavigating.getCountry().isEmpty() ? "No lands found" : "No lands found in " + userNavigating.getCountry() + ".";
+            throw new IllegalStateException(msg);
+        }
+
+        // Manual paging after filtering
+        int start = Math.min(page * size, filteredList.size());
+        int end = Math.min(start + size, filteredList.size());
+        List<Land> pageContent = filteredList.subList(start, end);
+        Page<Land> filteredPage = new PageImpl<>(pageContent, PageRequest.of(page, size, sort), filteredList.size());
+
+        return filteredPage.map(land -> {
+            LandDTO dto = new LandDTO(
+                    land.getId(),
+                    land.getLocation(),
+                    land.getSurfaceArea(),
+                    land.getUsage_type(),
+                    getDTO(land.getLandOwner())
+            );
+            dto.setLocationCoordinates(land.getLatitude(), land.getLongitude());
+            return dto;
+        });
+    }
+
 }

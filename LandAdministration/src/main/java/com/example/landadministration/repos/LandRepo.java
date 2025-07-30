@@ -8,6 +8,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.Collection;
@@ -16,6 +17,9 @@ import java.util.Optional;
 
 @Repository
 public interface LandRepo extends JpaRepository<Land, Integer>, JpaSpecificationExecutor<Land> {
+
+    @Query("SELECT l FROM Land l WHERE l.location LIKE %:country")
+    Page<Land> findByCountryInLocation(@Param("country") String country, Pageable pageable, Sort sort);
 
     @Query("select l from Land l where l.surfaceArea >= ?1 and l.surfaceArea <= ?2")
     List<Land> filterBySurfaceArea(double min, double max, Sort sort);
@@ -34,6 +38,8 @@ public interface LandRepo extends JpaRepository<Land, Integer>, JpaSpecification
 
     @Query("select l from Land l where l.surfaceArea >= ?1 and l.surfaceArea <= ?2")
     Page<Land> filterBySurfaceAreaPage(double min, double max, Pageable pageable);
+
+
 
     @Query("select l from Land l")
     Page<Land> findAllLandsPaged(Pageable pageable);
