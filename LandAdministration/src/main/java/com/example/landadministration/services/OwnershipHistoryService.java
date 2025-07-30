@@ -99,7 +99,8 @@ public class OwnershipHistoryService {
                 landOwner.getPhoneNb(),
                 landOwner.getEmailAddress(),
                 landCount,
-                Period.between(landOwner.getDateOfBirth(), LocalDate.now()).getYears());
+                Period.between(landOwner.getDateOfBirth(), LocalDate.now()).getYears(),
+                landOwner.getCountry());
         return landOwnerDTO;
     }
 

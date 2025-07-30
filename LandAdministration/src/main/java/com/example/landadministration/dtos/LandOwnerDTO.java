@@ -15,14 +15,16 @@ public class LandOwnerDTO {
     private String emailAddress;
     private Integer numberOfLands;
     private Integer age;
+    private String country;
 
-    public LandOwnerDTO(Integer id, String fullName, String phoneNumber, String emailAddress, Integer numberOfLands, Integer age) {
+    public LandOwnerDTO(Integer id, String fullName, String phoneNumber, String emailAddress, Integer numberOfLands, Integer age, String country) {
         this.id = id;
         this.fullName = fullName;
         this.phoneNumber = phoneNumber;
         this.emailAddress = emailAddress;
         this.numberOfLands = numberOfLands;
         this.age = age;
+        this.country = country;
     }
 
     public String toString() {
@@ -33,6 +35,7 @@ public class LandOwnerDTO {
                 ", emailAddress='" + emailAddress + '\'' +
                 ", numberOfLands=" + numberOfLands +
                 ", age=" + age +
+                ", country='" + country + '\'' +
                 '}';
     }
 

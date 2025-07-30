@@ -33,17 +33,21 @@ public class LandOwner {
     @Column(name = "dob")
     private LocalDate dateOfBirth;
 
+    @Column(name = "country")
+    private String country;
+
     @OneToMany(mappedBy = "landOwner")
     private List<Land> lands;
 
     public LandOwner() {}
 
-    public LandOwner(String firstName, String lastName, String phoneNumber, String emailAddress, LocalDate dateOfBirth) {
+    public LandOwner(String firstName, String lastName, String phoneNumber, String emailAddress, LocalDate dateOfBirth, String country) {
         this.firstName = firstName;
         this.lastName = lastName;
         this.phoneNb = phoneNumber;
         this.emailAddress = emailAddress;
         this.dateOfBirth = dateOfBirth;
+        this.country = country;
     }
 
     public String toString() {
@@ -54,6 +58,7 @@ public class LandOwner {
                 ", phoneNumber='" + phoneNb + '\'' +
                 ", emailAddress='" + emailAddress + '\'' +
                 ", dateOfBirth=" + dateOfBirth +
+                ", country='" + country + '\'' +
                 '}';
     }
 }

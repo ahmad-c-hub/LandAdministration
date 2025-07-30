@@ -22,6 +22,7 @@
     <include file="changes/014-alter-table-user-logs.xml" relativeToChangelogFile="true"/>
     <include file="changes/015-add-id-to-ownership.xml" relativeToChangelogFile="true"/>
     <include file="changes/016-add-country-column.xml" relativeToChangelogFile="true"/>
+    <include file="changes/017-add-country-to-land-owner.xml" relativeToChangelogFile="true"/>
 
 
 

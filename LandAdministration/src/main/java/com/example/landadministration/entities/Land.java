@@ -40,6 +40,14 @@ public class Land {
         this.usage_type = usage_type;
     }
 
+    public String getCountryFromLocation(String location) {
+        if (location == null || !location.contains(",")) {
+            return "Unknown";
+        }
+        String[] parts = location.split(",");
+        return parts[parts.length - 1].trim();
+    }
+
 
     public String toString() {
         return "Land{" +

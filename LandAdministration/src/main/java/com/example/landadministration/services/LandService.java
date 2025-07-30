@@ -28,6 +28,7 @@ import java.time.LocalDateTime;
 import java.time.Period;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 @Service
@@ -66,11 +67,17 @@ public class LandService {
     }
 
     public LandDTO addRecord(Land land) {
+        Users userNavigating = (Users) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         if (Double.isNaN(land.getLongitude())) {
             throw new IllegalStateException("Longitude not entered");
         }
         if (Double.isNaN(land.getLatitude())) {
             throw new IllegalStateException("Latitude not entered");
+        }
+        if(!userNavigating.getCountry().isEmpty()) {
+            if (!Objects.equals(land.getCountryFromLocation(getLocationFromCoordinates(land.getLatitude(), land.getLongitude())), userNavigating.getCountry())) {
+                throw new IllegalStateException("User does not have access to the given coordinates");
+            }
         }
         if(landRepo.findByLocationCoordinates(land.getLatitude(),land.getLongitude()).isPresent()){
             throw new IllegalStateException("Land already exists at the given coordinates");
@@ -82,7 +89,6 @@ public class LandService {
             land.setUsage_type("Residential");
         }
         land.setLocation(getLocationFromCoordinates(land.getLatitude(), land.getLongitude()));
-        Users userNavigating = (Users) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         UserLog userLog = new UserLog();
         userLog.setUser(userNavigating);
         userLog.setAction("ADD_LAND");
@@ -399,7 +405,8 @@ public class LandService {
                 landOwner.getPhoneNb(),
                 landOwner.getEmailAddress(),
                 landCount,
-                Period.between(landOwner.getDateOfBirth(), LocalDate.now()).getYears());
+                Period.between(landOwner.getDateOfBirth(), LocalDate.now()).getYears(),
+                landOwner.getCountry());
         return landOwnerDTO;
     }
 
