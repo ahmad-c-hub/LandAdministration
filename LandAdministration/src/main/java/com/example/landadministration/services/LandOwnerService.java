@@ -74,9 +74,6 @@ public class LandOwnerService {
                 }
             }
             Page<LandOwner> landOwnerPageToReturn = new PageImpl<>(filteredList, pageable, filteredList.size());
-            if (landOwnerPageToReturn.isEmpty()) {
-                throw new IllegalStateException("No land found in "+userNavigating.getCountry()+".");
-            }
             return landOwnerPageToReturn.map(landOwner -> {
                 Integer landCount = 0;
                 if(landOwner.getLands()!=null){
