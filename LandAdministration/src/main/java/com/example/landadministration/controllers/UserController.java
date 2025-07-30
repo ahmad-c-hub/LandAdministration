@@ -113,12 +113,21 @@ public class UserController {
     @PutMapping("/set-country")
     public String setCountry(@RequestParam String country){
         Users userNavigating = (Users) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        if(!country.equals("All Countries")){
+        if(!country.isEmpty()){
             userNavigating.setCountry(country);
             return "Country updated to " + country + " successfully.";
         }
+        userNavigating.setCountry("");
         return "Country updated to all countries successfully.";
 
+    }
+    @GetMapping("/get-country")
+    public String getCountry(){
+        Users userNavigating = (Users) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        if(userNavigating.getCountry().isEmpty()){
+            return "";
+        }
+        return userNavigating.getCountry();
     }
 
 
