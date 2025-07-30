@@ -107,7 +107,7 @@ public class UserService {
         }else{
             List<Users> usersFiltered = new ArrayList<>();
             for(Users user : users){
-                if(user.getCountry().equals(currentUser.getCountry())){
+                if(user.getCountry()!=null && user.getCountry().equals(currentUser.getCountry())){
                     usersFiltered.add(user);
                 }
             }
