@@ -13,10 +13,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import net.minidev.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.*;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.web.PagedModel;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -403,7 +400,7 @@ public class LandService {
     }
     public Page<LandDTO> searchLands(String location, String usageType, String ownerName, String sortedBy, int page, int size) {
         Specification<Land> spec = (root, query, cb) -> cb.conjunction();
-
+        Users userNavigating = (Users) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         if (location != null && !location.isEmpty()) {
             spec = spec.and(LandSpecification.hasLocation(location));
         }
@@ -418,11 +415,29 @@ public class LandService {
         Pageable pageable = PageRequest.of(page, size, sort);
         Page<Land> landPage = landRepo.findAll(spec, pageable);
 
-        return landPage.map(land -> {
-            LandDTO dto = new LandDTO(land.getId(), land.getLocation(), land.getSurfaceArea(), land.getUsage_type(),getDTO(land.getLandOwner()));
-            dto.setLocationCoordinates(land.getLatitude(), land.getLongitude());
-            return dto;
-        });
+        if(userNavigating.getCountry().isEmpty()){
+            return landPage.map(land -> {
+                LandDTO dto = new LandDTO(land.getId(), land.getLocation(), land.getSurfaceArea(), land.getUsage_type(),getDTO(land.getLandOwner()));
+                dto.setLocationCoordinates(land.getLatitude(), land.getLongitude());
+                return dto;
+            });
+        } else {
+            List<Land> filteredList = new ArrayList<>();
+
+            for (Land land : landPage) {
+                if (land.getCountryFromLocation(land.getLocation()).equals(userNavigating.getCountry())) {
+                    filteredList.add(land);
+                }
+            }
+
+            Page<Land> landPageToReturn = new PageImpl<>(filteredList, pageable, filteredList.size());
+            return landPageToReturn.map(land -> {
+                LandDTO dto = new LandDTO(land.getId(), land.getLocation(), land.getSurfaceArea(), land.getUsage_type(),getDTO(land.getLandOwner()));
+                dto.setLocationCoordinates(land.getLatitude(), land.getLongitude());
+                return dto;
+            });
+        }
+
     }
     public LandOwnerDTO getDTO(LandOwner landOwner){
         if(landOwner==null){
