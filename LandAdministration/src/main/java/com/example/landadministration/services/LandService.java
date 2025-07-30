@@ -278,9 +278,9 @@ public class LandService {
 
 
         Pageable pageable = PageRequest.of(page, size, sort);
-        Page<Land> landPage;
+        Page<Land> landPage = landRepo.findAllLandsPaged(pageable);
+
         if(userNavigating.getCountry().isEmpty()){
-            landPage = landRepo.findAllLandsPaged(pageable);
             if (landPage.isEmpty()) {
                 throw new IllegalStateException("No land found");
             }
@@ -297,8 +297,21 @@ public class LandService {
                 return dto;
             });
         }else{
-            landPage = landRepo.findByCountry(userNavigating.getCountry(), pageable);
-            return landPage.map(land -> {
+            List<Land> filteredList = new ArrayList<>();
+            if(landPage.getSize()==1){
+                filteredList.add(landPage.getContent().get(0));
+            }else {
+                for (Land land : landPage) {
+                    if (land.getCountryFromLocation(land.getLocation()).equals(userNavigating.getCountry())) {
+                        filteredList.add(land);
+                    }
+                }
+            }
+            Page<Land> landPageToReturn = new PageImpl<>(filteredList, pageable, filteredList.size());
+            if (landPageToReturn.isEmpty()) {
+                throw new IllegalStateException("No land found in "+userNavigating.getCountry()+".");
+            }
+            return landPageToReturn.map(land -> {
                 LandDTO dto = new LandDTO(land.getId(), land.getLocation(), land.getSurfaceArea(), land.getUsage_type(),getDTO(land.getLandOwner()));
                 dto.setLocationCoordinates(land.getLatitude(), land.getLongitude());
                 return dto;
@@ -351,10 +364,9 @@ public class LandService {
         }
 
         Pageable pageable = PageRequest.of(page, size, sort);
-        Page<Land> landPage;
+        Page<Land> landPage = landRepo.filterBySurfaceAreaPage(min, max, pageable);
 
         if(userNavigating.getCountry().isEmpty()){
-            landPage = landRepo.filterBySurfaceAreaPage(min, max, pageable);
             if (landPage.isEmpty()) {
                 throw new IllegalStateException("No land found within the given surface area");
             }
@@ -365,8 +377,17 @@ public class LandService {
                 return dto;
             });
         }else{
-            landPage = landRepo.filterBySurfaceAreaPageCountry(min, max, userNavigating.getCountry(), pageable);
-            return landPage.map(land -> {
+            List<Land> filteredList = new ArrayList<>();
+            for (Land land : landPage) {
+                if (land.getCountryFromLocation(land.getLocation()).equals(userNavigating.getCountry())) {
+                    filteredList.add(land);
+                }
+            }
+            Page<Land> landPageToReturn = new PageImpl<>(filteredList, pageable, filteredList.size());
+            if (landPageToReturn.isEmpty()) {
+                throw new IllegalStateException("No land found within the given surface area in "+userNavigating.getCountry());
+            }
+            return landPageToReturn.map(land -> {
                 LandDTO dto = new LandDTO(land.getId(), land.getLocation(), land.getSurfaceArea(), land.getUsage_type(),getDTO(land.getLandOwner()));
                 dto.setLocationCoordinates(land.getLatitude(), land.getLongitude());
                 return dto;
