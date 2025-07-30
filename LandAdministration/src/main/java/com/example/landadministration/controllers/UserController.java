@@ -41,6 +41,9 @@ public class UserController {
     @Autowired
     private UserService userService;
 
+    @Autowired
+    private UserRepo userRepo;
+
     @PostMapping("/login")
     public String login(@RequestBody Users user){
         System.out.println(user);
@@ -115,9 +118,11 @@ public class UserController {
         Users userNavigating = (Users) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         if(!country.isEmpty()){
             userNavigating.setCountry(country);
+            userRepo.save(userNavigating);
             return "Country updated to " + country + " successfully.";
         }
         userNavigating.setCountry("");
+        userRepo.save(userNavigating);
         return "Country updated to all countries successfully.";
 
     }
