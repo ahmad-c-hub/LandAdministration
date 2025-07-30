@@ -9,10 +9,7 @@ import com.example.landadministration.repos.OwnershipHistoryRepo;
 import com.example.landadministration.repos.UserLogRepo;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.*;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
@@ -40,6 +37,7 @@ public class LandOwnerService {
 
     public Page<LandOwnerDTO> getLandOwners(int page, int size, String sortedBy) {
         Sort sort;
+        Users userNavigating = (Users) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         if(sortedBy.equals("id")){
             sort = Sort.by(Sort.Direction.ASC,"id");
         }else if(sortedBy.equals("firstName")){
@@ -51,22 +49,51 @@ public class LandOwnerService {
         }
         Pageable pageable = PageRequest.of(page, size, sort);
         Page<LandOwner> landPage = landOwnerRepo.findAll(pageable);
-        return landPage.map(landOwner -> {
-            Integer landCount = 0;
-            if(landOwner.getLands()!=null){
-                landCount = landOwner.getLands().size();
+        if(userNavigating.getCountry().isEmpty()){
+            return landPage.map(landOwner -> {
+                Integer landCount = 0;
+                if(landOwner.getLands()!=null){
+                    landCount = landOwner.getLands().size();
+                }
+                LandOwnerDTO dto = new LandOwnerDTO(
+                        landOwner.getId(),
+                        landOwner.getFirstName() + " " + landOwner.getLastName(),
+                        landOwner.getPhoneNb(),
+                        landOwner.getEmailAddress(),
+                        landCount,
+                        Period.between(landOwner.getDateOfBirth(), LocalDate.now()).getYears(),
+                        landOwner.getCountry()
+                );
+                return dto;
+            });
+        }else{
+            List<LandOwner> filteredList = new ArrayList<>();
+            for (LandOwner landOwner : landPage) {
+                if (landOwner.getCountry().equals(userNavigating.getCountry())) {
+                    filteredList.add(landOwner);
+                }
             }
-            LandOwnerDTO dto = new LandOwnerDTO(
-                    landOwner.getId(),
-                    landOwner.getFirstName() + " " + landOwner.getLastName(),
-                    landOwner.getPhoneNb(),
-                    landOwner.getEmailAddress(),
-                    landCount,
-                    Period.between(landOwner.getDateOfBirth(), LocalDate.now()).getYears(),
-                    landOwner.getCountry()
-            );
-            return dto;
-        });
+            Page<LandOwner> landOwnerPageToReturn = new PageImpl<>(filteredList, pageable, filteredList.size());
+            if (landOwnerPageToReturn.isEmpty()) {
+                throw new IllegalStateException("No land found in "+userNavigating.getCountry()+".");
+            }
+            return landOwnerPageToReturn.map(landOwner -> {
+                Integer landCount = 0;
+                if(landOwner.getLands()!=null){
+                    landCount = landOwner.getLands().size();
+                }
+                LandOwnerDTO dto = new LandOwnerDTO(
+                        landOwner.getId(),
+                        landOwner.getFirstName() + " " + landOwner.getLastName(),
+                        landOwner.getPhoneNb(),
+                        landOwner.getEmailAddress(),
+                        landCount,
+                        Period.between(landOwner.getDateOfBirth(), LocalDate.now()).getYears(),
+                        landOwner.getCountry()
+                );
+                return dto;
+            });
+        }
     }
 
     public LandOwnerDTO addLandOwner(LandOwner landOwner) {
