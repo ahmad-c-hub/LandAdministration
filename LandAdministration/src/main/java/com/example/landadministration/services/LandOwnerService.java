@@ -124,6 +124,9 @@ public class LandOwnerService {
         if(landOwnerOptional1.isPresent()){
             throw new IllegalStateException("Land owner already exists with the given email address");
         }
+        if(landOwner.getCountry()==null){
+            landOwner.setCountry(userNavigating.getCountry());
+        }
         LandOwner savedLandOwner = landOwnerRepo.save(landOwner);
         UserLog userLog = new UserLog();
         userLog.setUser(userNavigating);
@@ -273,11 +276,19 @@ public class LandOwnerService {
 
     public LandOwnerDTO getLandOwnerById(Integer id) {
         Optional<LandOwner> landOwnerOptional = landOwnerRepo.findById(id);
+        Users userNavigating = (Users) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         if(!landOwnerOptional.isPresent()){
             throw new IllegalStateException("Land owner not found");
         }
         LandOwner landOwner = landOwnerOptional.get();
-        return getDTO(landOwner);
+        if(userNavigating.getCountry().isEmpty()){
+            return getDTO(landOwner);
+        }else{
+            if(!landOwner.getCountry().equals(userNavigating.getCountry())){
+                throw new IllegalStateException("Land owner not found in country "+userNavigating.getCountry()+".");
+            }
+            return getDTO(landOwner);
+        }
     }
 
     public List<LandDTO> getDTOListLand(List<Land> lands){
