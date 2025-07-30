@@ -10,6 +10,7 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -45,8 +46,4 @@ public interface LandRepo extends JpaRepository<Land, Integer>, JpaSpecification
 
     @Query("select l from Land l where l.landOwner is null")
     List<Land> getUnassignedLands();
-
-
-
-
 }

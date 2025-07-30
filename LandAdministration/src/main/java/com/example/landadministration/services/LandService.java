@@ -53,6 +53,7 @@ public class LandService {
 
 
     public List<LandDTO> getLandRecords(String sortedBy) {
+        Users userNavigating = (Users) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         List<Land> lands;
         if(sortedBy.equals("location")){
             lands = landRepo.findAll(Sort.by(Sort.Direction.ASC,"location"));
@@ -63,7 +64,17 @@ public class LandService {
         }else{
             lands = landRepo.findAll(Sort.by(Sort.Direction.ASC,"id"));
         }
-        return getDTOList(lands);
+        if(userNavigating.getCountry().isEmpty()){
+            return getDTOList(lands);
+        }else {
+            List<Land> landsToReturn = new ArrayList<>();
+            for (Land land : lands) {
+                if (land.getCountryFromLocation(getLocationFromCoordinates(land.getLatitude(), land.getLongitude())).equals(userNavigating.getCountry())) {
+                    landsToReturn.add(land);
+                }
+            }
+            return getDTOList(landsToReturn);
+        }
     }
 
     public LandDTO addRecord(Land land) {
@@ -156,15 +167,22 @@ public class LandService {
     }
 
     public LandDTO getLandRecordById(Integer id) {
+        Users userNavigating = (Users) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         Optional<Land> landOptional = landRepo.findById(id);
         if(!landOptional.isPresent()){
             throw new IllegalStateException("Land not found");
         }
         Land land = landOptional.get();
+        if(!userNavigating.getCountry().isEmpty()) {
+            if (!land.getCountryFromLocation(getLocationFromCoordinates(land.getLatitude(), land.getLongitude())).equals(userNavigating.getCountry())) {
+                throw new IllegalStateException("Land not found in "+userNavigating.getCountry());
+            }
+        }
         return getDTO(land);
     }
 
     public LandDTO deleteLandRecordById(Integer id) {
+        Users userNavigating = (Users) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         Optional<Land> landOptional = landRepo.findById(id);
         if(!landOptional.isPresent()){
             throw new IllegalStateException("Land not found");
@@ -172,7 +190,11 @@ public class LandService {
         if(landOptional.get().getLandOwner()!=null){
             throw new IllegalStateException("Land owner is assigned to this land, cannot delete the land. Please unassign the land owner first and then delete the land.");
         }
-        Users userNavigating = (Users) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        if(!userNavigating.getCountry().isEmpty()) {
+            if (!landOptional.get().getCountryFromLocation(getLocationFromCoordinates(landOptional.get().getLatitude(), landOptional.get().getLongitude())).equals(userNavigating.getCountry())) {
+                throw new IllegalStateException("Land not found in "+userNavigating.getCountry());
+            }
+        }
         UserLog userLog = new UserLog();
         userLog.setUser(userNavigating);
         userLog.setAction("DELETE_LAND");
@@ -185,6 +207,7 @@ public class LandService {
     }
 
     public List<LandDTO> getLandRecordsByUsageType(String usageType,String sortedBy) {
+        Users userNavigating = (Users) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         List<Land> lands;
         if(sortedBy.equals("location")){
             lands = landRepo.findByUsageType(usageType,Sort.by(Sort.Direction.ASC,"location"));
@@ -195,10 +218,20 @@ public class LandService {
         }else{
             lands = landRepo.findByUsageType(usageType, Sort.by (Sort.Direction.ASC, "id"));
         }
-        if(lands.size() == 0){
-            throw new IllegalStateException("No land found with the given usage type");
+        if(userNavigating.getCountry().isEmpty()) {
+            return getDTOList(lands);
+        }else{
+            List<Land> landsToReturn = new ArrayList<>();
+            for(Land land : lands){
+                if(land.getCountryFromLocation(getLocationFromCoordinates(land.getLatitude(),land.getLongitude())).equals(userNavigating.getCountry())){
+                    landsToReturn.add(land);
+                }
+            }
+            return getDTOList(landsToReturn);
+
         }
-        return getDTOList(lands);
+
+
     }
 
     public List<LandDTO> filterBySurfaceArea(double min, double max, String sortedBy) {
@@ -433,6 +466,16 @@ public class LandService {
     }
 
     public Integer getUnassignedLands() {
+        Users userNavigating = (Users) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        if(!userNavigating.getCountry().isEmpty()) {
+            List<Land> unassignedLandsByCountry = new ArrayList<>();
+            for (Land land : landRepo.getUnassignedLands()) {
+                if (land.getCountryFromLocation(getLocationFromCoordinates(land.getLatitude(), land.getLongitude())).equals(userNavigating.getCountry())) {
+                    unassignedLandsByCountry.add(land);
+                }
+            }
+            return unassignedLandsByCountry.size();
+        }
         System.out.println("Unassigned lands: " + landRepo.getUnassignedLands().size());
         return landRepo.getUnassignedLands().size();
     }
