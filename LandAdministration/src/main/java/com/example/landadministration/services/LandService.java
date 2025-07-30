@@ -69,7 +69,7 @@ public class LandService {
         }else {
             List<Land> landsToReturn = new ArrayList<>();
             for (Land land : lands) {
-                if (land.getCountryFromLocation(getLocationFromCoordinates(land.getLatitude(), land.getLongitude())).equals(userNavigating.getCountry())) {
+                if (land.getCountryFromLocation(land.getLocation()).equals(userNavigating.getCountry())) {
                     landsToReturn.add(land);
                 }
             }
@@ -174,7 +174,7 @@ public class LandService {
         }
         Land land = landOptional.get();
         if(!userNavigating.getCountry().isEmpty()) {
-            if (!land.getCountryFromLocation(getLocationFromCoordinates(land.getLatitude(), land.getLongitude())).equals(userNavigating.getCountry())) {
+            if (!land.getCountryFromLocation(land.getLocation()).equals(userNavigating.getCountry())) {
                 throw new IllegalStateException("Land not found in "+userNavigating.getCountry());
             }
         }
@@ -191,7 +191,7 @@ public class LandService {
             throw new IllegalStateException("Land owner is assigned to this land, cannot delete the land. Please unassign the land owner first and then delete the land.");
         }
         if(!userNavigating.getCountry().isEmpty()) {
-            if (!landOptional.get().getCountryFromLocation(getLocationFromCoordinates(landOptional.get().getLatitude(), landOptional.get().getLongitude())).equals(userNavigating.getCountry())) {
+            if (!landOptional.get().getCountryFromLocation(landOptional.get().getLocation()).equals(userNavigating.getCountry())) {
                 throw new IllegalStateException("Land not found in "+userNavigating.getCountry());
             }
         }
@@ -223,14 +223,13 @@ public class LandService {
         }else{
             List<Land> landsToReturn = new ArrayList<>();
             for(Land land : lands){
-                if(land.getCountryFromLocation(getLocationFromCoordinates(land.getLatitude(),land.getLongitude())).equals(userNavigating.getCountry())){
+                if(land.getCountryFromLocation(land.getLocation()).equals(userNavigating.getCountry())){
                     landsToReturn.add(land);
                 }
             }
             return getDTOList(landsToReturn);
 
         }
-
 
     }
 
@@ -470,7 +469,7 @@ public class LandService {
         if(!userNavigating.getCountry().isEmpty()) {
             List<Land> unassignedLandsByCountry = new ArrayList<>();
             for (Land land : landRepo.getUnassignedLands()) {
-                if (land.getCountryFromLocation(getLocationFromCoordinates(land.getLatitude(), land.getLongitude())).equals(userNavigating.getCountry())) {
+                if (land.getCountryFromLocation(land.getLocation()).equals(userNavigating.getCountry())) {
                     unassignedLandsByCountry.add(land);
                 }
             }
