@@ -15,4 +15,7 @@ public interface UserRepo extends JpaRepository<Users, Integer> {
 
     @Query("select u from Users u where u.username = ?1")
     Optional<Users>  findByUsername(String username);
+
+    @Query("select u from Users u where u.id = ?1 and u.country = ?2")
+    Optional<Users> findByIdAndCountry(Integer id, String country);
 }

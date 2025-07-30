@@ -11,10 +11,7 @@ import com.example.landadministration.repos.UserRepo;
 import jakarta.servlet.http.HttpServletRequest;
 import org.apache.catalina.User;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -101,10 +98,23 @@ public class UserService {
     }
 
     public Page<UsersDTO> getUsers(int page, int size) {
+        Users currentUser = (Users) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         Sort sort = Sort.by(Sort.Direction.ASC, "id");
         Pageable pageable = PageRequest.of(page,size, sort);
         Page<Users> users = userRepo.findAll(pageable);
-        return users.map(user -> new UsersDTO(user.getUsername(), user.getRole().getAuthority(),user.isGoogleUser(),user.getCountry()));
+        if(currentUser.getCountry().isEmpty()){
+            return users.map(user -> new UsersDTO(user.getUsername(), user.getRole().getAuthority(),user.isGoogleUser(),user.getCountry(),user.getId()));
+        }else{
+            List<Users> usersFiltered = new ArrayList<>();
+            for(Users user : users){
+                if(user.getCountry().equals(currentUser.getCountry())){
+                    usersFiltered.add(user);
+                }
+            }
+            Page<Users> usersPage = new PageImpl<>(usersFiltered, pageable, usersFiltered.size());
+            return usersPage.map(user -> new UsersDTO(user.getUsername(), user.getRole().getAuthority(),user.isGoogleUser(),user.getCountry(),user.getId()));
+        }
+
     }
 
     public String setRole(Integer id, String role, Users userNavigating) {
@@ -134,7 +144,7 @@ public class UserService {
             throw new IllegalStateException("User not found");
         }
         Users userToDelete = usersOptional.get();
-        UsersDTO userDTO = new UsersDTO(userToDelete.getUsername(), userToDelete.getRole().getAuthority(),userToDelete.isGoogleUser(), userToDelete.getCountry());
+        UsersDTO userDTO = new UsersDTO(userToDelete.getUsername(), userToDelete.getRole().getAuthority(),userToDelete.isGoogleUser(), userToDelete.getCountry(),userToDelete.getId());
         UserLog userLog = new UserLog();
         userLog.setUser(userNavigating);
         userLog.setAction("Delete User");
@@ -150,7 +160,7 @@ public class UserService {
             throw new IllegalStateException("User not found");
         }
         Users user = usersOptional.get();
-        UsersDTO userDTO = new UsersDTO(user.getUsername(), user.getRole().getAuthority(),user.isGoogleUser(), user.getCountry());
+        UsersDTO userDTO = new UsersDTO(user.getUsername(), user.getRole().getAuthority(),user.isGoogleUser(), user.getCountry(), user.getId());
         return userDTO;
     }
 
@@ -181,7 +191,7 @@ public class UserService {
             }
             user.setUsername(updatedUsername);
             userRepo.save(user);
-            UsersDTO userDTO = new UsersDTO(user.getUsername(), user.getRole().getAuthority(),user.isGoogleUser(), user.getCountry());
+            UsersDTO userDTO = new UsersDTO(user.getUsername(), user.getRole().getAuthority(),user.isGoogleUser(), user.getCountry(), user.getId());
             UserLog userLog = new UserLog();
             userLog.setUser(userNavigating);
             userLog.setAction("PROFILE_CHANGE");
@@ -190,7 +200,7 @@ public class UserService {
             userLogRepo.save(userLog);
             return userDTO;
         }else{
-            return new UsersDTO(user.getUsername(), user.getRole().getAuthority(),user.isGoogleUser(), user.getCountry());
+            return new UsersDTO(user.getUsername(), user.getRole().getAuthority(),user.isGoogleUser(), user.getCountry(), user.getId());
         }
 
     }
