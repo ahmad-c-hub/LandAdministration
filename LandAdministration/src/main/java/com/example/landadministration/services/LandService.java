@@ -266,58 +266,56 @@ public class LandService {
         Users userNavigating = (Users) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         Sort sort;
 
-        if (sortedBy.equals("location")) {
-            sort = Sort.by(Sort.Direction.ASC, "location");
-        } else if (sortedBy.equals("surfaceAreaDesc")) {
-            sort = Sort.by(Sort.Direction.DESC, "surfaceArea");
-        } else if (sortedBy.equals("surfaceAreaAsc")) {
-            sort = Sort.by(Sort.Direction.ASC, "surfaceArea");
-        } else {
-            sort = Sort.by(Sort.Direction.ASC, "id");
+        switch (sortedBy) {
+            case "location":
+                sort = Sort.by(Sort.Direction.ASC, "location");
+                break;
+            case "surfaceAreaDesc":
+                sort = Sort.by(Sort.Direction.DESC, "surfaceArea");
+                break;
+            case "surfaceAreaAsc":
+                sort = Sort.by(Sort.Direction.ASC, "surfaceArea");
+                break;
+            default:
+                sort = Sort.by(Sort.Direction.ASC, "id");
         }
 
+        // ✅ 1. Load all lands (sorted)
+        List<Land> allLands = landRepo.findAll(sort);
 
-        Pageable pageable = PageRequest.of(page, size, sort);
-        Page<Land> landPage = landRepo.findAllLandsPaged(pageable);
+        // ✅ 2. Filter by country using your logic
+        List<Land> filtered = userNavigating.getCountry().isEmpty()
+                ? allLands
+                : allLands.stream()
+                .filter(land -> land.getCountryFromLocation(land.getLocation()).equals(userNavigating.getCountry()))
+                .toList();
 
-        if(userNavigating.getCountry().isEmpty()){
-            if (landPage.isEmpty()) {
-                throw new IllegalStateException("No land found");
-            }
+        // ✅ 3. Manual pagination
+        int start = page * size;
+        int end = Math.min(start + size, filtered.size());
 
-            return landPage.map(land -> {
-                LandDTO dto = new LandDTO(
-                        land.getId(),
-                        land.getLocation(),
-                        land.getSurfaceArea(),
-                        land.getUsage_type(),
-                        getDTO(land.getLandOwner())
-                );
-                dto.setLocationCoordinates(land.getLatitude(), land.getLongitude());
-                return dto;
-            });
-        }else{
-            List<Land> filteredList = new ArrayList<>();
-            if(landPage.getSize()==1){
-                filteredList.add(landPage.getContent().get(0));
-            }else {
-                for (Land land : landPage) {
-                    if (land.getCountryFromLocation(land.getLocation()).equals(userNavigating.getCountry())) {
-                        filteredList.add(land);
-                    }
-                }
-            }
-            Page<Land> landPageToReturn = new PageImpl<>(filteredList, pageable, filteredList.size());
-            if (landPageToReturn.isEmpty()) {
-                throw new IllegalStateException("No land found in "+userNavigating.getCountry()+".");
-            }
-            return landPageToReturn.map(land -> {
-                LandDTO dto = new LandDTO(land.getId(), land.getLocation(), land.getSurfaceArea(), land.getUsage_type(),getDTO(land.getLandOwner()));
-                dto.setLocationCoordinates(land.getLatitude(), land.getLongitude());
-                return dto;
-            });
+        if (start >= filtered.size()) {
+            throw new IllegalStateException("No land found" +
+                    (userNavigating.getCountry().isEmpty() ? "." : " in " + userNavigating.getCountry() + "."));
         }
+
+        List<LandDTO> dtoPage = filtered.subList(start, end).stream()
+                .map(land -> {
+                    LandDTO dto = new LandDTO(
+                            land.getId(),
+                            land.getLocation(),
+                            land.getSurfaceArea(),
+                            land.getUsage_type(),
+                            getDTO(land.getLandOwner())
+                    );
+                    dto.setLocationCoordinates(land.getLatitude(), land.getLongitude());
+                    return dto;
+                }).toList();
+
+        // ✅ 4. Return paged DTOs
+        return new PageImpl<>(dtoPage, PageRequest.of(page, size, sort), filtered.size());
     }
+
 
 
     public Page<LandDTO> getPagedLandsByLocation(String location, String sortedBy, int page, int size) {
