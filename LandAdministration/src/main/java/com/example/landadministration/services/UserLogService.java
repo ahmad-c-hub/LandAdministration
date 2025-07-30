@@ -51,7 +51,7 @@ public class UserLogService {
         }else{
             List<UserLog> recordsFiltered = new ArrayList<>();
             for(UserLog record : records){
-                if(record.getUser()!=null && record.getUser().getCountry().equals(currentUser.getCountry())){
+                if(record.getUser()!=null && record.getUser().getCountry()!=null && record.getUser().getCountry().equals(currentUser.getCountry())){
                     recordsFiltered.add(record);
                 }
             }

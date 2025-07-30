@@ -118,8 +118,12 @@ public class UserService {
     }
 
     public String setRole(Integer id, String role, Users userNavigating) {
+        Users currentUser = (Users) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         Users userToChange = userRepo.findById(id)
                 .orElseThrow(() -> new IllegalStateException("User not found"));
+        if(userToChange.getCountry()!=null && !userToChange.getCountry().equals(currentUser.getCountry())){
+            throw new IllegalStateException("User is not in your country!");
+        }
         Role roleObj = roleRepo.findByName(role)
                 .orElseThrow(() -> new IllegalStateException("Role not found"));
         if(userToChange.getRole().equals(roleObj)){
@@ -138,7 +142,11 @@ public class UserService {
     }
 
     public UsersDTO delete(Integer id, Users userNavigating) {
+        Users currentUser = (Users) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         Optional<Users> usersOptional = userRepo.findById(id);
+        if(usersOptional.isPresent() && usersOptional.get().getCountry()!=null && !usersOptional.get().getCountry().equals(currentUser.getCountry())){
+            throw new IllegalStateException("User is not in your country!");
+        }
         userRepo.deleteById(id);
         if(!usersOptional.isPresent()){
             throw new IllegalStateException("User not found");
