@@ -110,6 +110,17 @@ public class UserController {
         return "Password updated successfully.";
     }
 
+    @PutMapping("/set-country")
+    public String setCountry(@RequestParam String country){
+        Users userNavigating = (Users) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        if(!country.equals("All Countries")){
+            userNavigating.setCountry(country);
+            return "Country updated to " + country + " successfully.";
+        }
+        return "Country updated to all countries successfully.";
+
+    }
+
 
 
 }
