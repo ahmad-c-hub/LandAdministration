@@ -18,8 +18,15 @@ import java.util.Optional;
 @Repository
 public interface LandRepo extends JpaRepository<Land, Integer>, JpaSpecificationExecutor<Land> {
 
-    @Query("SELECT l FROM Land l WHERE l.location LIKE %:country")
-    Page<Land> findByCountryInLocation(@Param("country") String country, Pageable pageable, Sort sort);
+    @Query(
+            value = """
+    SELECT * FROM land l
+    WHERE TRIM(SPLIT_PART(l.location, ',', array_length(string_to_array(l.location, ','), 1))) = :country
+    """,
+            nativeQuery = true
+    )
+    Page<Land> findByCountry(@Param("country") String country, Pageable pageable);
+
 
     @Query("select l from Land l where l.surfaceArea >= ?1 and l.surfaceArea <= ?2")
     List<Land> filterBySurfaceArea(double min, double max, Sort sort);
@@ -38,6 +45,27 @@ public interface LandRepo extends JpaRepository<Land, Integer>, JpaSpecification
 
     @Query("select l from Land l where l.surfaceArea >= ?1 and l.surfaceArea <= ?2")
     Page<Land> filterBySurfaceAreaPage(double min, double max, Pageable pageable);
+
+    @Query(
+            value = """
+    SELECT * FROM land l
+    WHERE l.surface_area >= :min AND l.surface_area <= :max
+      AND TRIM(SPLIT_PART(l.location, ',', array_length(string_to_array(l.location, ','), 1))) = :country
+    """,
+            countQuery = """
+    SELECT COUNT(*) FROM land l
+    WHERE l.surface_area >= :min AND l.surface_area <= :max
+      AND TRIM(SPLIT_PART(l.location, ',', array_length(string_to_array(l.location, ','), 1))) = :country
+    """,
+            nativeQuery = true
+    )
+    Page<Land> filterBySurfaceAreaPageCountry(
+            @Param("min") double min,
+            @Param("max") double max,
+            @Param("country") String country,
+            Pageable pageable
+    );
+
 
 
 
