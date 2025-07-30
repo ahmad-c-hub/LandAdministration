@@ -141,13 +141,9 @@ public class LandOwnerService {
         Users userNavigating = (Users) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         Land land = landRepo.findById(landId)
                 .orElseThrow(() -> new IllegalStateException("Land not found"));
-        Optional<LandOwner> ownerOptional = landOwnerRepo.findById(ownerId);
+        Optional<LandOwner> ownerOptional = landOwnerRepo.findByIdAndCountry(ownerId, land.getCountryFromLocation(land.getLocation()));
         if(!ownerOptional.isPresent()){
             throw new IllegalStateException("Land owner not found");
-        }
-
-        if(!ownerOptional.get().getCountry().equals(land.getCountryFromLocation(land.getLocation()))){
-            throw new IllegalStateException("Land owner not found in "+land.getCountryFromLocation(land.getLocation())+".");
         }
 
         LandOwner owner = ownerOptional.get();
