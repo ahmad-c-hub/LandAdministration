@@ -146,12 +146,11 @@ public class LandOwnerService {
             throw new IllegalStateException("Land owner not found");
         }
 
-        LandOwner owner = ownerOptional.get();
-
-        if(!owner.getCountry().equals(land.getCountryFromLocation(land.getLocation()))){
+        if(!ownerOptional.get().getCountry().equals(land.getCountryFromLocation(land.getLocation()))){
             throw new IllegalStateException("Land owner not found in "+land.getCountryFromLocation(land.getLocation())+".");
         }
 
+        LandOwner owner = ownerOptional.get();
 
         OwnershipHistoryId id = new OwnershipHistoryId(ownershipHistoryRepo.getNextRecordId(),land.getId(), owner.getId());
 
