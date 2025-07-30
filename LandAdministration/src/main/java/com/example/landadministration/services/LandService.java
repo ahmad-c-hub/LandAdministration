@@ -298,9 +298,13 @@ public class LandService {
             });
         }else{
             List<Land> filteredList = new ArrayList<>();
-            for (Land land : landPage) {
-                if (land.getCountryFromLocation(land.getLocation()).equals(userNavigating.getCountry())) {
-                    filteredList.add(land);
+            if(landPage.getSize()==1){
+                filteredList.add(landPage.getContent().get(0));
+            }else {
+                for (Land land : landPage) {
+                    if (land.getCountryFromLocation(land.getLocation()).equals(userNavigating.getCountry())) {
+                        filteredList.add(land);
+                    }
                 }
             }
             Page<Land> landPageToReturn = new PageImpl<>(filteredList, pageable, filteredList.size());
