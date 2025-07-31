@@ -134,6 +134,12 @@ public class UserController {
         }
         return userNavigating.getCountry();
     }
+    @GetMapping("/current-user")
+    public UsersDTO getCurrentUser() {
+        Users user = (Users) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        return userService.getUserById(user.getId());
+    }
+
 
 
 
