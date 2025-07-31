@@ -19,10 +19,10 @@ import java.util.Optional;
 public interface LandRepo extends JpaRepository<Land, Integer>, JpaSpecificationExecutor<Land> {
 
 
-    @Query("select l from Land l where l.id = ?1 and l.location like '%?2'")
+    @Query("select l from Land l where l.id = ?1 and l.location like concat('%', ?2)")
     Page<Land> findByIdAndCountry(Integer id, String country, Pageable pageable);
 
-    @Query("select l from Land l where l.location like '%?1'")
+    @Query("select l from Land l where l.location like concat('%', ?1)")
     Page<Land> findByCountry(String country, Pageable pageable);
 
 
