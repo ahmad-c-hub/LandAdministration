@@ -10,7 +10,7 @@ public class LandSpecification {
             if (location == null || location.isEmpty()) {
                 return criteriaBuilder.conjunction();
             }
-            return criteriaBuilder.like(root.get("location"), "%" + location);
+            return criteriaBuilder.like(root.get("location"), "%" + location+"%");
         };
     }
 
@@ -30,21 +30,23 @@ public class LandSpecification {
     }
 
     public static Specification<Land> hasOwnerName(String ownerName) {
-        return (root, query, criteriaBuilder) -> {
-            if (ownerName == null) {
-                return criteriaBuilder.conjunction();
+        return (root, query, cb) -> {
+            if (ownerName == null || ownerName.trim().isEmpty()) {
+                return cb.conjunction();
             }
-            return criteriaBuilder.equal(
-                    criteriaBuilder.concat(
-                            criteriaBuilder.concat(
-                                    root.join("landOwner").get("firstName"), " "
+
+            return cb.like(
+                    cb.concat(
+                            cb.concat(
+                                    root.join("landOwner").get("firstName"),
+                                    " "
                             ),
                             root.join("landOwner").get("lastName")
                     ),
-                    ownerName
+                    "%" + ownerName.trim() + "%"
             );
-
         };
     }
+
 }
 
