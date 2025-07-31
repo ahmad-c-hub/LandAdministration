@@ -278,9 +278,10 @@ public class LandService {
 
 
         Pageable pageable = PageRequest.of(page, size, sort);
-        Page<Land> landPage = landRepo.findAllLandsPaged(pageable);
+        Page<Land> landPage;
 
         if(userNavigating.getCountry().isEmpty()){
+            landPage = landRepo.findAll(pageable);
             if (landPage.isEmpty()) {
                 throw new IllegalStateException("No land found");
             }
@@ -297,22 +298,18 @@ public class LandService {
                 return dto;
             });
         }else{
-            List<Land> filteredList = new ArrayList<>();
-            if(landPage.getSize()==1){
-                filteredList.add(landPage.getContent().get(0));
-            }else {
-                for (Land land : landPage) {
-                    if (land.getCountryFromLocation(land.getLocation()).equals(userNavigating.getCountry())) {
-                        filteredList.add(land);
-                    }
-                }
+            landPage = landRepo.findByCountry(userNavigating.getCountry(),pageable);
+            if (landPage.isEmpty()) {
+                throw new IllegalStateException("No land found in "+userNavigating.getCountry());
             }
-            Page<Land> landPageToReturn = new PageImpl<>(filteredList, pageable, filteredList.size());
-            if (landPageToReturn.isEmpty()) {
-                throw new IllegalStateException("No land found in "+userNavigating.getCountry()+".");
-            }
-            return landPageToReturn.map(land -> {
-                LandDTO dto = new LandDTO(land.getId(), land.getLocation(), land.getSurfaceArea(), land.getUsage_type(),getDTO(land.getLandOwner()));
+            return landPage.map(land -> {
+                LandDTO dto = new LandDTO(
+                        land.getId(),
+                        land.getLocation(),
+                        land.getSurfaceArea(),
+                        land.getUsage_type(),
+                        getDTO(land.getLandOwner())
+                );
                 dto.setLocationCoordinates(land.getLatitude(), land.getLongitude());
                 return dto;
             });

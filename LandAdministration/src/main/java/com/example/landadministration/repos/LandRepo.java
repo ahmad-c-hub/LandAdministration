@@ -19,6 +19,12 @@ import java.util.Optional;
 public interface LandRepo extends JpaRepository<Land, Integer>, JpaSpecificationExecutor<Land> {
 
 
+    @Query("select l from Land l where l.id = ?1 and l.location like '%?2'")
+    Page<Land> findByIdAndCountry(Integer id, String country, Pageable pageable);
+
+    @Query("select l from Land l where l.location like '%?1'")
+    Page<Land> findByCountry(String country, Pageable pageable);
+
 
     @Query("select l from Land l where l.surfaceArea >= ?1 and l.surfaceArea <= ?2")
     List<Land> filterBySurfaceArea(double min, double max, Sort sort);
