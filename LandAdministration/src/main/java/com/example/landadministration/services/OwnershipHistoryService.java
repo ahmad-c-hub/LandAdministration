@@ -116,6 +116,15 @@ public class OwnershipHistoryService {
         });
     }
 
+    public List<OwnershipHistory> getOwnershipHistoryAsList(){
+        Users userNavigating = (Users) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        List<OwnershipHistory> historyList;
+        if(userNavigating.getCountry().isEmpty()){
+            return ownershipHistoryRepo.findAll();
+        }
+        return ownershipHistoryRepo.findAllByCountryList(userNavigating.getCountry());
+    }
+
 
     public LandOwnerDTO getOwnerDTO(LandOwner landOwner){
         if(landOwner==null){

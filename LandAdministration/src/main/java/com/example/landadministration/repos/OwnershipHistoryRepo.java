@@ -22,6 +22,9 @@ public interface OwnershipHistoryRepo extends JpaRepository<OwnershipHistory, Ow
     @Query("SELECT h FROM OwnershipHistory h WHERE h.owner.country = ?1")
     Page<OwnershipHistory> findAllByCountry(String country, Pageable pageable);
 
+    @Query("SELECT h FROM OwnershipHistory h WHERE h.owner.country = ?1")
+    List<OwnershipHistory> findAllByCountryList(String country);
+
 
     @Query("SELECT h FROM OwnershipHistory h WHERE h.land.id = :landId")
     Page<OwnershipHistory> findByLand_Id(Integer landId, Pageable pageable);

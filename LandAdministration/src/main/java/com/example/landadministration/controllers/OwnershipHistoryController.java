@@ -39,7 +39,7 @@ public class OwnershipHistoryController {
 
     @GetMapping("/records")
     public Integer getOwnershipHistoryRecordsSize(){
-        return ownershipHistoryRepository.findAll().size();
+        return ownershipHistoryService.getOwnershipHistoryAsList().size();
     }
 
     @GetMapping("/recordss")
