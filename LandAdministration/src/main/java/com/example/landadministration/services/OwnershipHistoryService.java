@@ -74,7 +74,7 @@ public class OwnershipHistoryService {
                 throw new IllegalStateException("No records found");
             }
         }else{
-            historyPaged = ownershipHistoryRepo.findAllByCountry(pageable,userNavigating.getCountry());
+            historyPaged = ownershipHistoryRepo.findAllByCountry(userNavigating.getCountry(),pageable);
             if(historyPaged.isEmpty()){
                 throw new IllegalStateException("No records found in "+userNavigating.getCountry()+".");
             }
