@@ -10,7 +10,7 @@ public class LandSpecification {
             if (location == null || location.isEmpty()) {
                 return criteriaBuilder.conjunction();
             }
-            return criteriaBuilder.equal(root.get("location"),"%" + location);
+            return criteriaBuilder.like(root.get("location"), "%" + location);
         };
     }
 
