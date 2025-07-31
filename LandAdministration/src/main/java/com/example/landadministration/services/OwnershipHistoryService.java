@@ -39,9 +39,18 @@ public class OwnershipHistoryService {
 
 
     public Page<OwnershipHistoryDTO> getLandHistoryById(int page, int size, Integer id) {
-        Optional<Land> land = landRepo.findById(id);
-        if (!land.isPresent()) {
-            throw new IllegalStateException("Land not found");
+        Users userNavigating = (Users) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        Optional<Land> land;
+        if(userNavigating.getCountry().isEmpty()){
+            land = landRepo.findById(id);
+            if (land.isEmpty()) {
+                throw new IllegalStateException("Land not found");
+            }
+        }else{
+            land = landRepo.findByIdAndCountry(id, userNavigating.getCountry());
+            if (land.isEmpty()) {
+                throw new IllegalStateException("Land not found in "+userNavigating.getCountry()+".");
+            }
         }
         Pageable pageable = PageRequest.of(page,size);
         Page<OwnershipHistory> landHistory = ownershipHistoryRepo.findByLand_Id(id,pageable);
@@ -56,8 +65,20 @@ public class OwnershipHistoryService {
     }
 
     public Page<OwnershipHistoryDTO> getAllRecords(int page, int size){
+        Users userNavigating = (Users) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         Pageable pageable = PageRequest.of(page,size);
-        Page<OwnershipHistory> historyPaged = ownershipHistoryRepo.findAll(pageable);
+        Page<OwnershipHistory> historyPaged;
+        if(userNavigating.getCountry().isEmpty()){
+            historyPaged = ownershipHistoryRepo.findAll(pageable);
+            if(historyPaged.isEmpty()){
+                throw new IllegalStateException("No records found");
+            }
+        }else{
+            historyPaged = ownershipHistoryRepo.findAllByCountry(pageable,userNavigating.getCountry());
+            if(historyPaged.isEmpty()){
+                throw new IllegalStateException("No records found in "+userNavigating.getCountry()+".");
+            }
+        }
         return historyPaged.map(ownershipHistory ->{
             OwnershipHistoryDTO dto = new OwnershipHistoryDTO(getLandDTO(ownershipHistory.getLand()),
                     getOwnerDTO(ownershipHistory.getOwner()),
@@ -69,10 +90,20 @@ public class OwnershipHistoryService {
     }
 
     public Page<OwnershipHistoryDTO> getOwnershipHistoryByOwnerId(int page, int size, Integer ownerId) {
-        Optional<LandOwner> landOwner = landOwnerRepo.findById(ownerId);
-        if (!landOwner.isPresent()) {
-            throw new IllegalStateException("Land Owner not found");
+        Users userNavigating = (Users) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        Optional<LandOwner> landOwner;
+        if(userNavigating.getCountry().isEmpty()) {
+            landOwner = landOwnerRepo.findById(ownerId);
+            if (!landOwner.isPresent()) {
+                throw new IllegalStateException("Land Owner not found");
+            }
+        }else{
+            landOwner= landOwnerRepo.findByIdAndCountry(ownerId, userNavigating.getCountry());
+            if (!landOwner.isPresent()) {
+                throw new IllegalStateException("Land Owner not found in "+userNavigating.getCountry()+".");
+            }
         }
+
         Pageable pageable = PageRequest.of(page,size);
         Page<OwnershipHistory> ownerHistory = ownershipHistoryRepo.findByOwner_Id(ownerId,pageable);
         return ownerHistory.map(ownershipHistory ->{

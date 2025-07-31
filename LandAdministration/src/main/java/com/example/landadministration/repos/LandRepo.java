@@ -21,7 +21,7 @@ public interface LandRepo extends JpaRepository<Land, Integer>, JpaSpecification
 
 
     @Query("select l from Land l where l.id = ?1 and l.location like concat('%', ?2)")
-    Page<Land> findByIdAndCountry(Integer id, String country, Pageable pageable);
+    Optional<Land> findByIdAndCountry(Integer id, String country);
 
     @Query("select l from Land l where l.location like concat('%', ?1)")
     Page<Land> findByCountry(String country, Pageable pageable);
