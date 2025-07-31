@@ -5,6 +5,7 @@ import com.example.landadministration.entities.Land;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
@@ -24,7 +25,6 @@ public interface LandRepo extends JpaRepository<Land, Integer>, JpaSpecification
 
     @Query("select l from Land l where l.location like concat('%', ?1)")
     Page<Land> findByCountry(String country, Pageable pageable);
-
 
     @Query("select l from Land l where l.surfaceArea >= ?1 and l.surfaceArea <= ?2")
     List<Land> filterBySurfaceArea(double min, double max, Sort sort);

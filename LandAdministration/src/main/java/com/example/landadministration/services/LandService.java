@@ -449,40 +449,21 @@ public class LandService {
         if (ownerName != null && !ownerName.isEmpty()) {
             spec = spec.and(LandSpecification.hasOwnerName(ownerName));
         }
+        if(!userNavigating.getCountry().isEmpty()){
+            spec = spec.and(LandSpecification.hasCountry(userNavigating.getCountry()));
+        }
 
         Sort sort = Sort.by(Sort.Direction.ASC, sortedBy);
         Pageable pageable = PageRequest.of(page, size, sort);
         Page<Land> landPage = landRepo.findAll(spec, pageable);
-
-        if(userNavigating.getCountry().isEmpty()){
-            if(landPage.isEmpty()){
-                throw new IllegalStateException("No lands found");
-            }
-            return landPage.map(land -> {
-                LandDTO dto = new LandDTO(land.getId(), land.getLocation(), land.getSurfaceArea(), land.getUsage_type(),getDTO(land.getLandOwner()));
-                dto.setLocationCoordinates(land.getLatitude(), land.getLongitude());
-                return dto;
-            });
-        } else {
-            List<Land> filteredList = new ArrayList<>();
-
-            for (Land land : landPage) {
-                if (land.getCountryFromLocation(land.getLocation()).equals(userNavigating.getCountry())) {
-                    filteredList.add(land);
-                }
-            }
-
-            Page<Land> landPageToReturn = new PageImpl<>(filteredList, pageable, filteredList.size());
-            if (landPageToReturn.isEmpty()) {
-                throw new IllegalStateException("No lands found in "+ userNavigating.getCountry() + ".");
-            }
-            return landPageToReturn.map(land -> {
-                LandDTO dto = new LandDTO(land.getId(), land.getLocation(), land.getSurfaceArea(), land.getUsage_type(),getDTO(land.getLandOwner()));
-                dto.setLocationCoordinates(land.getLatitude(), land.getLongitude());
-                return dto;
-            });
+        if (landPage.isEmpty()) {
+            throw new IllegalStateException("No land found with the given search criteria");
         }
-
+        return landPage.map(land -> {
+            LandDTO dto = new LandDTO(land.getId(), land.getLocation(), land.getSurfaceArea(), land.getUsage_type(),getDTO(land.getLandOwner()));
+            dto.setLocationCoordinates(land.getLatitude(), land.getLongitude());
+            return dto;
+        });
     }
     public LandOwnerDTO getDTO(LandOwner landOwner){
         if(landOwner==null){

@@ -14,6 +14,12 @@ public class LandSpecification {
         };
     }
 
+    public static Specification<Land> hasCountry(String country) {
+        return (root, query, cb) ->
+                cb.like(root.get("location"), "%" + country);
+    }
+
+
     public static Specification<Land> hasUsageType(String usageType) {
         return (root, query, criteriaBuilder) -> {
             if (usageType == null || usageType.isEmpty()) {
