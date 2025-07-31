@@ -137,7 +137,8 @@ public class UserController {
     @GetMapping("/current-user")
     public UsersDTO getCurrentUser() {
         Users user = (Users) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        return userService.getUserById(user.getId());
+        UsersDTO userDTO = new UsersDTO(user.getUsername(), user.getRole().getAuthority(),user.isGoogleUser(),user.getCountry(),user.getId());
+        return userDTO;
     }
 
 
