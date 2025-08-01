@@ -44,6 +44,9 @@ public interface LandRepo extends JpaRepository<Land, Integer>, JpaSpecification
     @Query("select l from Land l where l.surfaceArea >= ?1 and l.surfaceArea <= ?2")
     Page<Land> filterBySurfaceAreaPage(double min, double max, Pageable pageable);
 
+    @Query("select l from Land l where l.surfaceArea >= ?1 and l.surfaceArea <= ?2 and l.location like concat('%',?3) ")
+    Page<Land> filterBySurfaceAreaAndCountry(double min, double max, String country, Pageable pageable);
+
 
 
     @Query("select l from Land l")
