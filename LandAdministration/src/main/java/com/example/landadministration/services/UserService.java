@@ -101,18 +101,13 @@ public class UserService {
         Users currentUser = (Users) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         Sort sort = Sort.by(Sort.Direction.ASC, "id");
         Pageable pageable = PageRequest.of(page,size, sort);
-        Page<Users> users = userRepo.findAll(pageable);
+        Page<Users> users;
         if(currentUser.getCountry().isEmpty()){
+            users = userRepo.findAll(pageable);
             return users.map(user -> new UsersDTO(user.getUsername(), user.getRole().getAuthority(),user.isGoogleUser(),user.getCountry(),user.getId()));
         }else{
-            List<Users> usersFiltered = new ArrayList<>();
-            for(Users user : users){
-                if(user.getCountry()!=null && user.getCountry().equals(currentUser.getCountry())){
-                    usersFiltered.add(user);
-                }
-            }
-            Page<Users> usersPage = new PageImpl<>(usersFiltered, pageable, usersFiltered.size());
-            return usersPage.map(user -> new UsersDTO(user.getUsername(), user.getRole().getAuthority(),user.isGoogleUser(),user.getCountry(),user.getId()));
+            users = userRepo.findAllByCountry(currentUser.getCountry(),pageable);
+            return users.map(user -> new UsersDTO(user.getUsername(), user.getRole().getAuthority(),user.isGoogleUser(),user.getCountry(),user.getId()));
         }
 
     }
