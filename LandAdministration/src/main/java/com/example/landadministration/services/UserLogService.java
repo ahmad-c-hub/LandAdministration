@@ -30,8 +30,9 @@ public class UserLogService {
     public Page<UserLogDTO> getUserLogRecords(int page, int size) {
         Users currentUser = (Users) org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         Pageable pageable = PageRequest.of(page,size);
-        Page<UserLog> records = userLogRepo.findAllByOrderByCreatedAtDesc(pageable);
+        Page<UserLog> records;
         if(currentUser.getCountry().isEmpty()){
+            records = userLogRepo.findAllByOrderByCreatedAtDesc(pageable);
             return records.map(record ->{
                 String username = "Deleted User";
                 String role = "N/A";
@@ -41,22 +42,18 @@ public class UserLogService {
                 }
                 UserLogDTO dto = new UserLogDTO(
                         username,
+                        record.getUser().getId(),
                         role,
                         record.getAction(),
                         record.getTimestamp(),
-                        record.getDescription()
+                        record.getDescription(),
+                        record.getUser().getCountry()
                 );
                 return dto;
             });
         }else{
-            List<UserLog> recordsFiltered = new ArrayList<>();
-            for(UserLog record : records){
-                if(record.getUser()!=null && record.getUser().getCountry()!=null && record.getUser().getCountry().equals(currentUser.getCountry())){
-                    recordsFiltered.add(record);
-                }
-            }
-            Page<UserLog> recordsPage = new PageImpl<>(recordsFiltered, pageable, recordsFiltered.size());
-            return recordsPage.map(record ->{
+           records = userLogRepo.findAllByCountry(currentUser.getCountry(),pageable);
+            return records.map(record ->{
                 String username = "Deleted User";
                 String role = "N/A";
                 if(record.getUser()!=null){
@@ -65,10 +62,12 @@ public class UserLogService {
                 }
                 UserLogDTO dto = new UserLogDTO(
                         username,
+                        record.getUser().getId(),
                         role,
                         record.getAction(),
                         record.getTimestamp(),
-                        record.getDescription()
+                        record.getDescription(),
+                        record.getUser().getCountry()
                 );
                 return dto;
             });
@@ -83,17 +82,22 @@ public class UserLogService {
         if(!user.isPresent()){
             throw new IllegalStateException("User not found");
         }
-        if(!currentUser.getCountry().equals(user.get().getCountry())){
-            throw new IllegalStateException("User not in your country");
+        if(!currentUser.getCountry().isEmpty()) {
+            if (!currentUser.getCountry().equals(user.get().getCountry())) {
+                throw new IllegalStateException("User not in your country");
+            }
         }
+
         Page<UserLog> records = userLogRepo.findByUser_Id(id,pageable);
         return records.map(record ->{
             UserLogDTO dto = new UserLogDTO(
                     record.getUser().getUsername(),
+                    record.getUser().getId(),
                     record.getUser().getRole().getAuthority(),
                     record.getAction(),
                     record.getTimestamp(),
-                    record.getDescription()
+                    record.getDescription(),
+                    record.getUser().getCountry()
             );
             return dto;
         });
@@ -106,10 +110,12 @@ public class UserLogService {
         return logs.map(log ->{
             UserLogDTO dto = new UserLogDTO(
                     log.getUser().getUsername(),
+                    log.getUser().getId(),
                     log.getUser().getRole().getAuthority(),
                     log.getAction(),
                     log.getTimestamp(),
-                    log.getDescription()
+                    log.getDescription(),
+                    log.getUser().getCountry()
             );
             return dto;
         });
