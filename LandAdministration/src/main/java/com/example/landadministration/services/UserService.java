@@ -116,7 +116,7 @@ public class UserService {
         Users currentUser = (Users) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         Users userToChange = userRepo.findById(id)
                 .orElseThrow(() -> new IllegalStateException("User not found"));
-        if(userToChange.getCountry()!=null && !userToChange.getCountry().equals(currentUser.getCountry())){
+        if(!currentUser.getCountry().isEmpty() && !userToChange.getCountry().equals(currentUser.getCountry())){
             throw new IllegalStateException("User is not in your country!");
         }
         Role roleObj = roleRepo.findByName(role)
