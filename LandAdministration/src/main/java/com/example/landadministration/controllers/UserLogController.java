@@ -32,14 +32,14 @@ public class UserLogController {
     @Autowired
     private UserLogService userLogService;
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("!hasRole('ROLE_USER')")
     @GetMapping("/records")
     public Page<UserLogDTO> getUserLogRecords(@RequestParam int page,
                                               @RequestParam int size){
         return userLogService.getUserLogRecords(page,size);
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("!hasRole('ROLE_USER')")
     @GetMapping("/records/{id}")
     public Page<UserLogDTO> getUserLogRecordsByUserId(@RequestParam int page,
                                                       @RequestParam int size,
