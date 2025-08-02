@@ -36,6 +36,7 @@ public class LandController {
     @Autowired
     private LandService landService;
 
+    @PreAuthorize("!hasRole('ROLE_USER')")
     @PostMapping("/add")
     public LandDTO addLandRecord(@RequestBody Land land){
         return landService.addRecord(land);
@@ -46,6 +47,7 @@ public class LandController {
         return landService.getLandRecords(sortedBy);
     }
 
+    @PreAuthorize("!hasRole('ROLE_USER')")
     @PutMapping("/update-usage-type/{id}/{usage_type}")
     public LandDTO updateUsageType(@PathVariable Integer id, @PathVariable String usage_type){
         return landService.updateUsageType(id, usage_type);
@@ -76,6 +78,7 @@ public class LandController {
         return landService.filterBySurfaceArea(min,max,sortedBy);
     }
 
+    @PreAuthorize("!hasRole('ROLE_USER')")
     @PostMapping("/unassign-owner/{id}")
     public LandDTO unassignOwner(@PathVariable Integer id){
         return landService.unassignOwner(id);

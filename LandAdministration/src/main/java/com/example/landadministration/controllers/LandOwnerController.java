@@ -7,6 +7,7 @@ import com.example.landadministration.entities.LandOwner;
 import com.example.landadministration.services.LandOwnerService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -40,11 +41,13 @@ public class LandOwnerController {
         return landOwnerService.getLandOwners(page,size,sortedBy);
     }
 
+    @PreAuthorize("!hasRole('ROLE_USER')")
     @PostMapping("/add")
     public LandOwnerDTO addLandOwner(@RequestBody LandOwner landOwner){
         return landOwnerService.addLandOwner(landOwner);
     }
 
+    @PreAuthorize("!hasRole('ROLE_USER')")
     @PostMapping("/{land_id}/assign-owner/{owner_id}")
     public LandDTO assignLandToOwner(@PathVariable Integer land_id, @PathVariable Integer owner_id){
         return landOwnerService.assignLandToOwner(owner_id,land_id);
@@ -58,12 +61,14 @@ public class LandOwnerController {
         return landOwnerService.getLandsByOwnerId(id,sortedBy,page,size);
     }
 
+    @PreAuthorize("!hasRole('ROLE_USER')")
     @PutMapping("/update-owner")
     public LandOwnerDTO updateOwnerById(@RequestBody LandOwner landOwner,
                                     @RequestParam Integer id){
         return landOwnerService.updateOwnerById(landOwner,id);
     }
 
+    @PreAuthorize("!hasRole('ROLE_USER')")
     @DeleteMapping("/delete-owner")
     public String deleteOwnerById(@RequestParam Integer id){
         return landOwnerService.deleteOwnerById(id);

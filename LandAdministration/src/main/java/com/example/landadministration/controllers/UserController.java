@@ -56,14 +56,14 @@ public class UserController {
         return userService.register(user);
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("!hasRole('ROLE_USER')")
     @PutMapping("/set-role/{id}/{role}")
     public String setRole(@PathVariable Integer id, @PathVariable String role){
         Users userNavigating = (Users) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         return userService.setRole(id,role, userNavigating);
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("!hasRole('ROLE_USER')")
     @GetMapping("/get-users")
     public Page<UsersDTO> getUsers(@RequestParam int page,
                                    @RequestParam int size){
@@ -77,15 +77,14 @@ public class UserController {
     }
 
 
-
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("!hasRole('ROLE_USER')")
     @DeleteMapping("/delete/{id}")
     public UsersDTO deleteUserById(@PathVariable Integer id){
         Users userNavigating = (Users) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         return userService.delete(id, userNavigating);
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("!hasRole('ROLE_USER')")
     @GetMapping("/get-user/{id}")
     public UsersDTO getUserById(@PathVariable Integer id){
         return userService.getUserById(id);
