@@ -158,13 +158,24 @@ public class UserService {
     }
 
     public UsersDTO getUserById(Integer id) {
-        Optional<Users> usersOptional = userRepo.findById(id);
-        if(!usersOptional.isPresent()){
-            throw new IllegalStateException("User not found");
+        Users currentUser = (Users) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        if(currentUser.getCountry().isEmpty()){
+            Optional<Users> usersOptional = userRepo.findById(id);
+            if(!usersOptional.isPresent()){
+                throw new IllegalStateException("User not found");
+            }
+            Users user = usersOptional.get();
+            UsersDTO userDTO = new UsersDTO(user.getUsername(), user.getRole().getAuthority(),user.isGoogleUser(), user.getCountry(), user.getId());
+            return userDTO;
+        }else{
+            Optional<Users> usersOptional = userRepo.findByIdAndCountry(id, currentUser.getCountry());
+            if(!usersOptional.isPresent()){
+                throw new IllegalStateException("User not found in your country.");
+            }
+            Users user = usersOptional.get();
+            UsersDTO userDTO = new UsersDTO(user.getUsername(), user.getRole().getAuthority(),user.isGoogleUser(), user.getCountry(), user.getId());
+            return userDTO;
         }
-        Users user = usersOptional.get();
-        UsersDTO userDTO = new UsersDTO(user.getUsername(), user.getRole().getAuthority(),user.isGoogleUser(), user.getCountry(), user.getId());
-        return userDTO;
     }
 
     public String logout(HttpServletRequest request, Users userNavigating) {
