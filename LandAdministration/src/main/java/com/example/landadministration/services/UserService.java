@@ -139,7 +139,7 @@ public class UserService {
     public UsersDTO delete(Integer id, Users userNavigating) {
         Users currentUser = (Users) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         Optional<Users> usersOptional = userRepo.findById(id);
-        if(usersOptional.isPresent() && usersOptional.get().getCountry()!=null && !usersOptional.get().getCountry().equals(currentUser.getCountry())){
+        if(usersOptional.isPresent() && !usersOptional.get().getCountry().isEmpty() && !usersOptional.get().getCountry().equals(currentUser.getCountry())){
             throw new IllegalStateException("User is not in your country!");
         }
         userRepo.deleteById(id);
