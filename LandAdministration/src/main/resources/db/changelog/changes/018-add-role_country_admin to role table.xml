@@ -7,7 +7,7 @@
 
     <changeSet id="018" author="ahmad">
         <insert tableName="roles">
-            <column name="name" value="COUNTRY_ADMIN"/>
+            <column name="name" value="ROLE_COUNTRY_ADMIN"/>
         </insert>
     </changeSet>
 </databaseChangeLog>
