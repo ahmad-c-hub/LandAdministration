@@ -24,7 +24,7 @@
     <include file="changes/016-add-country-column.xml" relativeToChangelogFile="true"/>
     <include file="changes/017-add-country-to-land-owner.xml" relativeToChangelogFile="true"/>
     <include file="changes/018-add-role_country_admin to role table.xml" relativeToChangelogFile="true"/>
-
+    <include file="changes/019-create-notifications-table.xml" relativeToChangelogFile="true"/>
 
 
 
