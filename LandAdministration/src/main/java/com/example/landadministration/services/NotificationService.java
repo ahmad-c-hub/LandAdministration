@@ -2,8 +2,10 @@ package com.example.landadministration.services;
 
 import com.example.landadministration.dtos.NotificationDTO;
 import com.example.landadministration.entities.Notification;
+import com.example.landadministration.entities.Users;
 import com.example.landadministration.repos.NotificationRepo;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -48,9 +50,21 @@ public class NotificationService {
     }
 
     public List<NotificationDTO> getAll() {
-        return notificationRepo.findAll()
-                .stream()
-                .map(this::toDTO)
-                .collect(Collectors.toList());
+        Users userNavigating = (Users) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+
+        List<Notification> notifications = notificationRepo.findNotificationsByCountry(userNavigating.getCountry());
+
+        return notifications.stream().map(n -> {
+            NotificationDTO dto = new NotificationDTO();
+            dto.setId(n.getId());
+            dto.setTitle(n.getTitle());
+            dto.setMessage(n.getMessage());
+            dto.setIssuedAt(n.getIssuedAt());
+            dto.setSenderId(n.getSender() != null ? n.getSender().getId() : null);
+            dto.setRead(n.isRead());
+            dto.setReceiverId(n.getReceiver() != null ? n.getReceiver().getId() : null);
+            return dto;
+        }).collect(Collectors.toList());
     }
+
 }
