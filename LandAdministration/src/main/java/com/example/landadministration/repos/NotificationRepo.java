@@ -16,7 +16,7 @@ public interface NotificationRepo extends JpaRepository<Notification, Integer> {
 
     List<Notification> findByReceiver_IdOrderByIssuedAtDesc(Integer receiverId);
 
-    @Query("select n from Notification n where n.message like '%'+?1+'%'")
+    @Query("select n from Notification n where n.message like concat('%',?1,'%')")
     List<Notification> findNotificationsByCountry(String country);
 
 }
