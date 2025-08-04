@@ -49,6 +49,7 @@ public class UserService {
     @Autowired
     private AuthenticationManager authenticationManager;
 
+    @Autowired
     private NotificationRepo notificationRepo;
 
     public String verify(Users user) {
