@@ -107,7 +107,7 @@ public class LandService {
         userLogRepo.save(userLog);
         Notification notification = new Notification();
         notification.setSender(userNavigating);
-        notification.setReceiver(null);
+        notification.setReceiver(userNavigating);
         notification.setTitle("New Land Added");
         notification.setMessage("New Land : " + savedLand.getId() + " ; Location : " + savedLand.getLocation() + ".");
         notification.setRead(false);
