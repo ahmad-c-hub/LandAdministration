@@ -32,7 +32,7 @@ public class NotificationController {
     @GetMapping("/my")
     public List<NotificationDTO> getMyNotifications() {
         Users currentUser = (Users) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        return notificationService.getNotificationsForUser(currentUser.getId());
+        return notificationService.getAll();
     }
 
     @PutMapping("/{id}/mark-read")

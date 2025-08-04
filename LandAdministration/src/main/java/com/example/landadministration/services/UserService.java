@@ -121,12 +121,12 @@ public class UserService {
         Users currentUser = (Users) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         Users userToChange = userRepo.findById(id)
                 .orElseThrow(() -> new IllegalStateException("User not found"));
-        if(!currentUser.getCountry().isEmpty() && !userToChange.getCountry().equals(currentUser.getCountry())){
+        if (!currentUser.getCountry().isEmpty() && !userToChange.getCountry().equals(currentUser.getCountry())) {
             throw new IllegalStateException("User is not in your country!");
         }
         Role roleObj = roleRepo.findByName(role)
                 .orElseThrow(() -> new IllegalStateException("Role not found"));
-        if(userToChange.getRole().equals(roleObj)){
+        if (userToChange.getRole().equals(roleObj)) {
             throw new IllegalStateException("Role is already set");
         }
         userToChange.setRole(roleObj);
@@ -135,103 +135,10 @@ public class UserService {
         userLog.setUser(userNavigating);
         userLog.setAction("ROLE_CHANGE");
         userLog.setTimestamp(LocalDateTime.now());
-        userLog.setDescription("Admin "+userNavigating.getUsername()+" changed role of {"+
-                userToChange.getUsername()+"} from {"+roleObj.getAuthority()+"} to {"+userToChange.getRole().getAuthority()+"} successfully.");
+        userLog.setDescription("Admin " + userNavigating.getUsername() + " changed role of {" +
+                userToChange.getUsername() + "} from {" + roleObj.getAuthority() + "} to {" + userToChange.getRole().getAuthority() + "} successfully.");
         userLogRepo.save(userLog);
         return "Role set successfully!";
-    }
-
-    public String requestRoleChange(Integer targetUserId, String roleName, String reason, Users countryAdmin) {
-        Users targetUser = userRepo.findById(targetUserId)
-                .orElseThrow(() -> new IllegalStateException("User not found"));
-
-        if (!countryAdmin.getCountry().equals(targetUser.getCountry())) {
-            throw new IllegalStateException("User is not in your country");
-        }
-
-        Optional<Users> globalAdminOptional = userRepo.findById(1);
-        Users globalAdmin = globalAdminOptional.orElseThrow(() -> new IllegalStateException("Global admin not found"));
-
-        String message = "REQUEST: Promote user: " + targetUser.getUsername() +
-                " to role: " + roleName + "\nREASON: " + reason;
-
-        Notification notification = new Notification();
-        notification.setSender(countryAdmin);
-        notification.setReceiver(globalAdmin);
-        notification.setTitle("Role Promotion Request");
-        notification.setMessage(message);
-        notification.setRead(false);
-        notificationRepo.save(notification);
-
-        return "Request sent to global admin.";
-    }
-
-    public String respondToRoleRequest(String responseMessage, Users globalAdmin) {
-        String[] lines = responseMessage.split("\n");
-        if (lines.length < 2) {
-            return "Invalid message format. Please include a reason.";
-        }
-
-        String decisionLine = lines[0].trim(); // ACCEPTED or REJECTED line
-        String reasonLine = lines[1].trim();   // REASON: something
-
-        boolean approved = decisionLine.startsWith("ACCEPTED:");
-        boolean rejected = decisionLine.startsWith("REJECTED:");
-        if (!approved && !rejected) {
-            return "Invalid decision format. Message must start with ACCEPTED: or REJECTED:";
-        }
-
-        try {
-            // Example: "ACCEPTED: Promote user: adnan123 to role: COUNTRY_ADMIN"
-            String usernamePart = decisionLine.split("user:")[1].split("to")[0].trim();
-            String rolePart = decisionLine.split("role:")[1].trim();
-            String reason = reasonLine.replace("REASON:", "").trim();
-
-            Users userToChange = userRepo.findByUsername(usernamePart)
-                    .orElseThrow(() -> new IllegalStateException("User not found"));
-
-            Users originalRequester = notificationRepo
-                    .findTopByMessageContainingAndReceiver_UsernameOrderByIssuedAtDesc("user: " + usernamePart, globalAdmin.getUsername())
-                    .map(Notification::getSender)
-                    .orElseThrow(() -> new IllegalStateException("Original requester not found"));
-
-            if (approved) {
-                Role newRole = roleRepo.findByName(rolePart)
-                        .orElseThrow(() -> new IllegalStateException("Role not found"));
-
-                if (!userToChange.getRole().equals(newRole)) {
-                    userToChange.setRole(newRole);
-                    userRepo.save(userToChange);
-                }
-
-                // Send notification to requester
-                Notification confirmation = new Notification();
-                confirmation.setSender(globalAdmin);
-                confirmation.setReceiver(originalRequester);
-                confirmation.setTitle("Role Change Approved");
-                confirmation.setMessage("User '" + usernamePart + "' was promoted to '" + rolePart + "'.\nReason: " + reason);
-                confirmation.setRead(false);
-                notificationRepo.save(confirmation);
-
-                return "Role change applied and requester notified.";
-
-            } else if (rejected) {
-                Notification rejection = new Notification();
-                rejection.setSender(globalAdmin);
-                rejection.setReceiver(originalRequester);
-                rejection.setTitle("Role Change Rejected");
-                rejection.setMessage("Role change request for user '" + usernamePart + "' to '" + rolePart + "' was rejected.\nReason: " + reason);
-                rejection.setRead(false);
-                notificationRepo.save(rejection);
-
-                return "Rejection recorded and requester notified.";
-            }
-
-        } catch (Exception e) {
-            return "Failed to process response: " + e.getMessage();
-        }
-
-        return "Unhandled response.";
     }
 
 

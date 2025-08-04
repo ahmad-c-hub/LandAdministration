@@ -3,10 +3,7 @@ package com.example.landadministration.services;
 import com.example.landadministration.dtos.LandDTO;
 import com.example.landadministration.dtos.LandOwnerDTO;
 import com.example.landadministration.entities.*;
-import com.example.landadministration.repos.LandOwnerRepo;
-import com.example.landadministration.repos.LandRepo;
-import com.example.landadministration.repos.OwnershipHistoryRepo;
-import com.example.landadministration.repos.UserLogRepo;
+import com.example.landadministration.repos.*;
 import com.example.landadministration.specifications.LandSpecification;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -45,6 +42,9 @@ public class LandService {
 
     @Autowired
     private UserLogRepo userLogRepo;
+
+    @Autowired
+    private NotificationRepo notificationRepo;
 
 
 
@@ -105,6 +105,15 @@ public class LandService {
         userLog.setDescription("User {" + userNavigating.getUsername() + "} added land with id {" + savedLand.getId() + "} " +
                 "and with location {" + savedLand.getLocation() + "}.");
         userLogRepo.save(userLog);
+        Notification notification = new Notification();
+        notification.setSender(userNavigating);
+        notification.setReceiver(null);
+        notification.setTitle("New Land Added");
+        notification.setMessage("New Land : " + savedLand.getId() + " ; Location : " + savedLand.getLocation() + ".");
+        notification.setRead(false);
+        notification.setIssuedAt(LocalDateTime.now());
+        notificationRepo.save(notification);
+
         return getDTO(savedLand);
     }
 

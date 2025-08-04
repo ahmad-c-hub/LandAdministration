@@ -60,30 +60,10 @@ public class UserController {
     @PutMapping("/set-role/{id}/{role}")
     public String setRole(
             @PathVariable Integer id,
-            @PathVariable String role,
-            @RequestParam(required = false) String reason) {
+            @PathVariable String role){
 
         Users userNavigating = (Users) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-
-        // If the user is the super admin, allow direct role change
-        if (userNavigating.getUsername().equalsIgnoreCase("ADMIN")) {
-            return userService.setRole(id, role, userNavigating);
-        }
-
-        // If reason is not provided, reject the request
-        if (reason == null || reason.trim().isEmpty()) {
-            throw new IllegalArgumentException("Reason must be provided when requesting role change.");
-        }
-
-        // Else, initiate role request workflow
-        return userService.requestRoleChange(id, role, reason, userNavigating);
-    }
-
-    @PostMapping("/notifications/respond")
-    public String respond(@RequestBody Map<String, String> payload) {
-        String message = payload.get("message");
-        Users admin = (Users) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        return userService.respondToRoleRequest(message, admin);
+        return userService.setRole(id, role, userNavigating);
     }
 
 

@@ -46,4 +46,11 @@ public class NotificationService {
         dto.setIssuedAt(n.getIssuedAt());
         return dto;
     }
+
+    public List<NotificationDTO> getAll() {
+        return notificationRepo.findAll()
+                .stream()
+                .map(this::toDTO)
+                .collect(Collectors.toList());
+    }
 }
