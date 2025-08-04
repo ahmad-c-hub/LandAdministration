@@ -2,9 +2,11 @@ package com.example.landadministration.services;
 
 
 import com.example.landadministration.dtos.UsersDTO;
+import com.example.landadministration.entities.Notification;
 import com.example.landadministration.entities.Role;
 import com.example.landadministration.entities.UserLog;
 import com.example.landadministration.entities.Users;
+import com.example.landadministration.repos.NotificationRepo;
 import com.example.landadministration.repos.RoleRepo;
 import com.example.landadministration.repos.UserLogRepo;
 import com.example.landadministration.repos.UserRepo;
@@ -46,6 +48,8 @@ public class UserService {
 
     @Autowired
     private AuthenticationManager authenticationManager;
+
+    private NotificationRepo notificationRepo;
 
     public String verify(Users user) {
         try {
@@ -135,6 +139,111 @@ public class UserService {
         userLogRepo.save(userLog);
         return "Role set successfully!";
     }
+
+    public String requestRoleChange(Integer targetUserId, String roleName, String reason, Users countryAdmin) {
+        Users targetUser = userRepo.findById(targetUserId)
+                .orElseThrow(() -> new IllegalStateException("User not found"));
+
+        if (!countryAdmin.getCountry().equals(targetUser.getCountry())) {
+            throw new IllegalStateException("User is not in your country");
+        }
+
+        Optional<Users> globalAdminOptional = userRepo.findById(1);
+        Users globalAdmin = globalAdminOptional.orElseThrow(() -> new IllegalStateException("Global admin not found"));
+
+        String message = "REQUEST: Promote user: " + targetUser.getUsername() +
+                " to role: " + roleName + "\nREASON: " + reason;
+
+        Notification notification = new Notification();
+        notification.setSender(countryAdmin);
+        notification.setReceiver(globalAdmin);
+        notification.setTitle("Role Promotion Request");
+        notification.setMessage(message);
+        notification.setRead(false);
+        notificationRepo.save(notification);
+
+        return "Request sent to global admin.";
+    }
+
+    public String respondToRoleRequest(String responseMessage, Users globalAdmin) {
+        String[] lines = responseMessage.split("\n");
+        if (lines.length < 2) {
+            return "Invalid message format. Please include a reason.";
+        }
+
+        String decisionLine = lines[0].trim(); // ACCEPTED or REJECTED line
+        String reasonLine = lines[1].trim();   // REASON: something
+
+        boolean approved = decisionLine.startsWith("ACCEPTED:");
+        boolean rejected = decisionLine.startsWith("REJECTED:");
+        if (!approved && !rejected) {
+            return "Invalid decision format. Message must start with ACCEPTED: or REJECTED:";
+        }
+
+        try {
+            // Example: "ACCEPTED: Promote user: adnan123 to role: COUNTRY_ADMIN"
+            String usernamePart = decisionLine.split("user:")[1].split("to")[0].trim();
+            String rolePart = decisionLine.split("role:")[1].trim();
+            String reason = reasonLine.replace("REASON:", "").trim();
+
+            Users userToChange = userRepo.findByUsername(usernamePart)
+                    .orElseThrow(() -> new IllegalStateException("User not found"));
+
+            Users originalRequester = notificationRepo
+                    .findTopByMessageContainingAndReceiver_UsernameOrderByIssuedAtDesc("user: " + usernamePart, globalAdmin.getUsername())
+                    .map(Notification::getSender)
+                    .orElseThrow(() -> new IllegalStateException("Original requester not found"));
+
+            if (approved) {
+                Role newRole = roleRepo.findByName(rolePart)
+                        .orElseThrow(() -> new IllegalStateException("Role not found"));
+
+                if (!userToChange.getRole().equals(newRole)) {
+                    userToChange.setRole(newRole);
+                    userRepo.save(userToChange);
+
+                    // Log
+                    UserLog log = new UserLog();
+                    log.setUser(globalAdmin);
+                    log.setAction("ROLE_APPROVAL");
+                    log.setTimestamp(LocalDateTime.now());
+                    log.setDescription("Global admin approved role change of " + usernamePart + " to " + rolePart + " with reason: " + reason);
+                    userLogRepo.save(log);
+                }
+
+                // Send notification to requester
+                Notification confirmation = new Notification();
+                confirmation.setSender(globalAdmin);
+                confirmation.setReceiver(originalRequester);
+                confirmation.setTitle("Role Change Approved");
+                confirmation.setMessage("User '" + usernamePart + "' was promoted to '" + rolePart + "'.\nReason: " + reason);
+                confirmation.setRead(false);
+                notificationRepo.save(confirmation);
+
+                return "Role change applied and requester notified.";
+
+            } else if (rejected) {
+                Notification rejection = new Notification();
+                rejection.setSender(globalAdmin);
+                rejection.setReceiver(originalRequester);
+                rejection.setTitle("Role Change Rejected");
+                rejection.setMessage("Role change request for user '" + usernamePart + "' to '" + rolePart + "' was rejected.\nReason: " + reason);
+                rejection.setRead(false);
+                notificationRepo.save(rejection);
+
+                return "Rejection recorded and requester notified.";
+            }
+
+        } catch (Exception e) {
+            return "Failed to process response: " + e.getMessage();
+        }
+
+        return "Unhandled response.";
+    }
+
+
+
+
 
     public UsersDTO delete(Integer id, Users userNavigating) {
         Users currentUser = (Users) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
