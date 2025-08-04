@@ -79,6 +79,14 @@ public class UserController {
         return userService.requestRoleChange(id, role, reason, userNavigating);
     }
 
+    @PostMapping("/notifications/respond")
+    public String respond(@RequestBody Map<String, String> payload) {
+        String message = payload.get("message");
+        Users admin = (Users) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        return userService.respondToRoleRequest(message, admin);
+    }
+
+
 
     @PreAuthorize("!hasRole('ROLE_USER')")
     @GetMapping("/get-users")

@@ -202,14 +202,6 @@ public class UserService {
                 if (!userToChange.getRole().equals(newRole)) {
                     userToChange.setRole(newRole);
                     userRepo.save(userToChange);
-
-                    // Log
-                    UserLog log = new UserLog();
-                    log.setUser(globalAdmin);
-                    log.setAction("ROLE_APPROVAL");
-                    log.setTimestamp(LocalDateTime.now());
-                    log.setDescription("Global admin approved role change of " + usernamePart + " to " + rolePart + " with reason: " + reason);
-                    userLogRepo.save(log);
                 }
 
                 // Send notification to requester
