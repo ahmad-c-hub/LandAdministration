@@ -9,6 +9,20 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
+@CrossOrigin(
+        origins = {
+                "http://localhost:3000",           // for local development
+                "https://ahmad-c-hub.github.io"    // for production (GitHub Pages)
+        },
+        allowedHeaders = "*",
+        methods = {
+                RequestMethod.GET,
+                RequestMethod.POST,
+                RequestMethod.PUT,
+                RequestMethod.DELETE,
+                RequestMethod.OPTIONS
+        }
+)
 @RequestMapping("/notifications")
 public class NotificationController {
 
