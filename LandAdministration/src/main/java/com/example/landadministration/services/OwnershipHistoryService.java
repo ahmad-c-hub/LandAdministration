@@ -165,4 +165,8 @@ public class OwnershipHistoryService {
 
         return "All records deleted successfully";
     }
+
+    public Page<OwnershipHistoryDTO> getByOwnerAndLandIds(int page, int size, Integer ownerId, Integer landId) {
+
+    }
 }

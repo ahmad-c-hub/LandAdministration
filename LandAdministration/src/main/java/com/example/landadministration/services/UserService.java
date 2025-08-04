@@ -138,12 +138,15 @@ public class UserService {
 
     public UsersDTO delete(Integer id, Users userNavigating) {
         Users currentUser = (Users) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        if(currentUser.getId().equals(id)){
+            throw new IllegalStateException("You cannot delete yourself!");
+        }
         Optional<Users> usersOptional = userRepo.findById(id);
         if(usersOptional.isPresent() && !usersOptional.get().getCountry().isEmpty() && !usersOptional.get().getCountry().equals(currentUser.getCountry())){
             throw new IllegalStateException("User is not in your country!");
         }
         userRepo.deleteById(id);
-        if(!usersOptional.isPresent()){
+        if(usersOptional.isEmpty()){
             throw new IllegalStateException("User not found");
         }
         Users userToDelete = usersOptional.get();
@@ -161,7 +164,7 @@ public class UserService {
         Users currentUser = (Users) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         if(currentUser.getCountry().isEmpty()){
             Optional<Users> usersOptional = userRepo.findById(id);
-            if(!usersOptional.isPresent()){
+            if(usersOptional.isEmpty()){
                 throw new IllegalStateException("User not found");
             }
             Users user = usersOptional.get();
