@@ -4,10 +4,12 @@ import com.example.landadministration.dtos.NotificationDTO;
 import com.example.landadministration.entities.Notification;
 import com.example.landadministration.repos.NotificationRepo;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Service
 public class NotificationService {
     @Autowired
     private NotificationRepo notificationRepo;
