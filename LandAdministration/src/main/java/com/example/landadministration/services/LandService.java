@@ -506,6 +506,14 @@ public class LandService {
         userLog.setTimestamp(LocalDateTime.now());
         userLog.setDescription("User {" + user.getUsername() + "} unassigned land with id {" + landId + "} from owner {" + owner.getId() + "}.");
         userLogRepo.save(userLog);
+        Notification notification = new Notification();
+        notification.setRead(false);
+        notification.setSender(user);
+        notification.setReceiver(user);
+        notification.setTitle("Land Now Vacant");
+        notification.setMessage("Land Now Vacant: Land with id {" + landId + "} is now vacant, in country "+land.getCountryFromLocation(land.getLocation())+".");
+        notification.setIssuedAt(LocalDateTime.now());
+        notificationRepo.save(notification);
         return getDTO(updatedLand);
     }
 

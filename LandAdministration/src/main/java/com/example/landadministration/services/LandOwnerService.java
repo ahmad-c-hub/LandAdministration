@@ -174,7 +174,8 @@ public class LandOwnerService {
         notification.setReceiver(userNavigating);
         notification.setTitle("Ownership Transfer");
         notification.setRead(false);
-        notification.setMessage("New Ownership for Land : "+landId+" ; New Owner : "+ownerId+" ; Old Owner : "+old+" , in Country : "+land.getCountryFromLocation(land.getLocation())+".");
+        notification.setMessage("New Ownership for Land : "+landId+" ; New Owner : "+ownerId+" ; Old Owner : "+old+" , in Country : "
+                +land.getCountryFromLocation(land.getLocation())+".");
         notificationRepo.save(notification);
 
         LandDTO landDTO = new LandDTO(
