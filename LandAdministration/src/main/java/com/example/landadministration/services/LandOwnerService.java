@@ -3,10 +3,7 @@ package com.example.landadministration.services;
 import com.example.landadministration.dtos.LandDTO;
 import com.example.landadministration.dtos.LandOwnerDTO;
 import com.example.landadministration.entities.*;
-import com.example.landadministration.repos.LandOwnerRepo;
-import com.example.landadministration.repos.LandRepo;
-import com.example.landadministration.repos.OwnershipHistoryRepo;
-import com.example.landadministration.repos.UserLogRepo;
+import com.example.landadministration.repos.*;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.*;
@@ -34,6 +31,9 @@ public class LandOwnerService {
 
     @Autowired
     private UserLogRepo userLogRepo;
+
+    @Autowired
+    private NotificationRepo notificationRepo;
 
     public Page<LandOwnerDTO> getLandOwners(int page, int size, String sortedBy) {
         Sort sort;
@@ -132,8 +132,6 @@ public class LandOwnerService {
         return getDTO(savedLandOwner);
     }
 
-    //When we reassign the same land to the same owner in which the land was already assigned to this owner but was unassigned,
-    // it just updates the old history record and does not create a new record
     public LandDTO assignLandToOwner(Integer ownerId, Integer landId) {
         Users userNavigating = (Users) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         Land land = landRepo.findById(landId)
@@ -171,6 +169,14 @@ public class LandOwnerService {
         userLog.setDescription("User {" + userNavigating.getUsername() + "} transferred ownership of land with id" +
                 " {" + landId + "} from land owner with id {" + old + "} to land owner with id {" + ownerId + "}.");
         userLogRepo.save(userLog);
+        Notification notification = new Notification();
+        notification.setSender(userNavigating);
+        notification.setReceiver(userNavigating);
+        notification.setTitle("Ownership Transfer");
+        notification.setRead(false);
+        notification.setMessage("New Ownership for Land : "+landId+" ; New Owner : "+ownerId+" ; Old Owner : "+old+".");
+        notificationRepo.save(notification);
+
         LandDTO landDTO = new LandDTO(
                 land.getId(),
                 land.getLocation(),
